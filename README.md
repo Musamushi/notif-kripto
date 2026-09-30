@@ -5,10 +5,13 @@ lalu mengirim grafik + pesan Telegram bila:
 
 - harga menyentuh **Low** atau **Peak** salah satu tahun sebelumnya (sejak 2017),
 - harga mencetak **Low baru** atau **Peak baru** tahun ini, atau
-- indeks **Fear & Greed** berubah 10 poin atau lebih dari nilai terakhir yang dilaporkan.
+- indeks **Fear & Greed** berubah 10 poin atau lebih dari nilai terakhir yang dilaporkan, atau
+  menyentuh ambang ekstrem 25/20/15/10 (Extreme Fear) atau 75/80/85/90 (Extreme Greed). Ambang yang
+  sudah dilaporkan baru aktif lagi setelah nilainya menjauh 5 poin.
 
 Pesan berisi grafik Low/Peak per tahun dan harga 1 tahun terakhir, indeks Fear & Greed,
-harga sekarang, level terdekat, dan daftar Low/Peak setiap tahun. Setiap harga ditulis dalam dolar diikuti rupiahnya, dengan kurs
+harga sekarang, level terdekat, dan tabel Low/Peak setiap tahun (dolar, rupiah, tanggal, dan jarak
+dari harga sekarang: 🟢▲ = level di atas harga, 🔴▼ = level di bawah harga). Setiap harga ditulis dalam dolar diikuti rupiahnya, dengan kurs
 USD→IDR hari ini dari CoinMarketCap (cadangan: Yahoo). Peringatan tetap dihitung dalam dolar. Pengaturan (toleransi, dll.) ada di bagian atas `pantau.py`.
 
 ## Perintah Telegram

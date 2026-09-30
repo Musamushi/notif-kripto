@@ -47,6 +47,9 @@ LANGKAH_LOW_BARU = 0.03     # selama terus mencetak Low/Peak baru, lapor lagi ti
 MIN_HARI_TAHUN_INI = 14     # awal Januari: Low/Peak baru tahun ini baru dilaporkan setelah ada 14 hari data
 LAPOR_PEAK_TAHUN_INI = True   # False = hanya lapor Low baru tahun ini
 FG_LANGKAH = 10             # lapor bila Fear & Greed berubah sebanyak ini dari nilai terakhir yang dilaporkan
+FG_AMBANG_BAWAH = (25, 20, 15, 10)  # selalu lapor saat turun sampai angka ini (Extreme Fear)
+FG_AMBANG_ATAS = (75, 80, 85, 90)   # selalu lapor saat naik sampai angka ini (Extreme Greed)
+FG_JARAK_ULANG = 5          # ambang yang sudah dilaporkan baru aktif lagi setelah menjauh 5 poin
 
 WIB = timezone(timedelta(hours=7))
 FOLDER = Path(__file__).resolve().parent
@@ -79,7 +82,9 @@ BANTUAN = (
     "Perintah dibaca setiap pemeriksaan (sekitar tiap 15 menit), jadi balasannya bisa "
     "datang beberapa menit kemudian.\n\n"
     "Peringatan otomatis dikirim bila harga menyentuh Low/Peak tahun sebelumnya, mencetak "
-    f"Low/Peak baru tahun ini, atau Fear &amp; Greed berubah {FG_LANGKAH} poin."
+    f"Low/Peak baru tahun ini, atau Fear &amp; Greed berubah {FG_LANGKAH} poin / menyentuh "
+    f"{', '.join(map(str, FG_AMBANG_BAWAH))} atau {', '.join(map(str, FG_AMBANG_ATAS))}.\n\n"
+    "🟢▲ = level di atas harga sekarang, 🔴▼ = level di bawah harga sekarang."
 )
 
 
@@ -271,8 +276,8 @@ def periksa(sym, harga, rk, st, sekarang):
             if lapor and cukup_data and (st[jangkar] is None
                                          or not lebih_ekstrem(st[jangkar] * langkah, harga)):
                 kejadian.append({"tahun": tahun_ini, "teks":
-                                 f"{jenis.capitalize()} baru {tahun_ini}! "
-                                 f"(sebelumnya {usd_idr(ref[0])}, {tanggal(ref[1])})"})
+                                 f"<b>{jenis.capitalize()} baru {tahun_ini}!</b>\n"
+                                 f"      sebelumnya {usd_idr(ref[0])} ({tanggal(ref[1])})"})
                 st[jangkar] = harga
         elif ref and st[jangkar] is not None and abs(harga - ref[0]) / ref[0] >= JARAK_SIAGA_ULANG:
             st[jangkar] = None
@@ -294,9 +299,9 @@ def periksa(sym, harga, rk, st, sekarang):
                 st["level"][nama] = {"sisi": sisi, "siaga": jarak > TOLERANSI}
                 continue
             if lv["siaga"] and (jarak <= TOLERANSI or sisi != lv["sisi"]):
-                gerak = "turun" if lv["sisi"] == "atas" else "naik"
+                gerak = "Turun" if lv["sisi"] == "atas" else "Naik"
                 kejadian.append({"tahun": tahun, "teks":
-                                 f"Harga {gerak} menyentuh <b>{nama}</b> ({usd_idr(nilai)})"})
+                                 f"<b>{gerak} menyentuh {nama}</b>\n      {usd_idr(nilai)}"})
                 lv["siaga"] = False
             elif not lv["siaga"] and jarak >= JARAK_SIAGA_ULANG:
                 lv["siaga"] = True
@@ -304,19 +309,41 @@ def periksa(sym, harga, rk, st, sekarang):
     return kejadian
 
 
+def ambang_terlewati(skor):
+    return sorted([a for a in FG_AMBANG_BAWAH if skor <= a] + [a for a in FG_AMBANG_ATAS if skor >= a])
+
+
 def periksa_fg(fg, status, sekarang):
-    """Kembalikan nilai terakhir yang dilaporkan bila Fear & Greed sudah bergeser >= FG_LANGKAH."""
+    """(catatan F&G baru untuk disimpan bila pesan terkirim, daftar alasan lapor).
+    Lapor bila bergeser >= FG_LANGKAH dari nilai terakhir yang dilaporkan, atau menyentuh ambang ekstrem."""
     if not fg:
-        return None
+        return None, []
     lama = status.get("fg")
+    baru = {"skor": fg["skor"], "nama": fg["nama"], "sumber": fg["sumber"], "waktu": sekarang.isoformat()}
     if not lama or lama.get("sumber") != fg["sumber"]:  # awal, atau ganti sumber (skalanya beda): catat saja
-        status["fg"] = catatan_fg(fg, sekarang)
-        return None
-    return lama if abs(fg["skor"] - lama["skor"]) >= FG_LANGKAH else None
-
-
-def catatan_fg(fg, sekarang):
-    return {"skor": fg["skor"], "nama": fg["nama"], "sumber": fg["sumber"], "waktu": sekarang.isoformat()}
+        status["fg"] = {**baru, "ambang": ambang_terlewati(fg["skor"])}
+        return None, []
+    skor, alasan = fg["skor"], []
+    selisih = skor - lama["skor"]
+    if abs(selisih) >= FG_LANGKAH:
+        alasan.append(f"{'Naik' if selisih > 0 else 'Turun'} {abs(selisih)} poin dari {lama['skor']} "
+                      f"({html.escape(lama['nama'])}), {jam_wib(datetime.fromisoformat(lama['waktu']))}")
+    # Ambang yang sudah dilaporkan aktif lagi setelah skor menjauh FG_JARAK_ULANG poin
+    sudah = {a for a in lama.get("ambang", [])
+             if not (a in FG_AMBANG_BAWAH and skor >= a + FG_JARAK_ULANG)
+             and not (a in FG_AMBANG_ATAS and skor <= a - FG_JARAK_ULANG)}
+    for a in FG_AMBANG_BAWAH:
+        if skor <= a and a not in sudah:
+            alasan.append(f"🚨 Menyentuh {a} ke bawah (Extreme Fear)")
+            sudah.add(a)
+    for a in FG_AMBANG_ATAS:
+        if skor >= a and a not in sudah:
+            alasan.append(f"🚨 Menyentuh {a} ke atas (Extreme Greed)")
+            sudah.add(a)
+    if alasan:
+        return {**baru, "ambang": sorted(sudah)}, alasan
+    lama["ambang"] = sorted(sudah)  # tanpa pesan: hanya catat ambang yang aktif lagi
+    return None, []
 
 
 # ---------------------------------------------------------------- Pesan
@@ -337,8 +364,8 @@ def rupiah(x):
 
 
 def usd_idr(x):
-    """Dolar diikuti rupiahnya (kurs hari ini), misalnya $1.5285 / Rp27.423."""
-    return f"{uang(x)} / {rupiah(x * KURS_IDR[0])}" if KURS_IDR else uang(x)
+    """Dolar diikuti rupiahnya (kurs hari ini), misalnya $1.5285 ≈ Rp27.423."""
+    return f"{uang(x)} ≈ {rupiah(x * KURS_IDR[0])}" if KURS_IDR else uang(x)
 
 
 def tanggal(iso):
@@ -385,32 +412,65 @@ def persen(nilai, harga):
     return f"{(nilai / harga - 1) * 100:+.1f}%"
 
 
-def susun_pesan(sym, k, harga, kejadian, level, fg, sekarang, sumber):
-    """(bagian atas untuk keterangan foto, bagian bawah berisi daftar tahun dan sumber)."""
-    ditandai = {x["tahun"] for x in kejadian}
-    atas = [label_fg(fg), "", f"<b>{sym}  {usd_idr(harga)}</b>"]
-    atas += [f"⚠️ {x['teks']}" for x in kejadian]
-    bawah_lv, atas_lv = level_terdekat(harga, level)
-    terdekat = []
-    if bawah_lv:
-        terdekat.append(f"↓ {bawah_lv[0]} {usd_idr(bawah_lv[1])} ({persen(bawah_lv[1], harga)})")
-    if atas_lv:
-        terdekat.append(f"↑ {atas_lv[0]} {usd_idr(atas_lv[1])} ({persen(atas_lv[1], harga)})")
-    if terdekat:
-        atas.append("Terdekat:\n" + "\n".join(terdekat))
+def panah(nilai, harga):
+    """🟢▲ = level di atas harga sekarang, 🔴▼ = di bawah."""
+    return "🟢▲" if nilai > harga else "🔴▼"
 
-    bawah = []
+
+def rupiah_ringkas(x):
+    """Rupiah yang muat di kolom tabel: Rp27.346, Rp689,2 jt, Rp1,33 M (miliar)."""
+    if x >= 1e9:
+        return "Rp" + f"{x / 1e9:.2f}".replace(".", ",") + " M"
+    if x >= 1e6:
+        return "Rp" + f"{x / 1e6:.1f}".replace(".", ",") + " jt"
+    return rupiah(x)
+
+
+def tabel_level(level, harga, ditandai):
+    """Tabel huruf lebar-sama (<pre>) Low/Peak per tahun: dolar, rupiah, tanggal, jarak dari harga sekarang.
+    Lebar maks ±29 huruf supaya muat di layar HP. Tanda > menandai tahun yang sedang disentuh."""
+    baris = [f"{'Tahun':<6} {'Low':<11} Peak"]
     for tahun, lo, lo_tgl, hi, hi_tgl in level:
-        tanda = "👉 " if tahun in ditandai else ""
-        bawah.append(f"{tanda}[Low {tahun}] {usd_idr(lo)} ({tanggal(lo_tgl)}) - "
-                     f"[Peak {tahun}] {usd_idr(hi)} ({tanggal(hi_tgl)})")
-    bawah.append("")
-    halaman = f"https://coinmarketcap.com/currencies/{k['halaman']}/"
-    bawah.append(f"📊 Sumber Low/Peak: CoinMarketCap, data harian (high/low per hari) · "
-                 f'<a href="{halaman}">grafik {sym}</a> · <a href="{halaman}historical-data/">data harian</a>')
+        tanda = "&gt;" if tahun in ditandai else " "
+        baris.append(f"{tanda}{tahun:<5} {uang(lo):<11} {uang(hi)}")
+        if KURS_IDR:
+            baris.append(f"{'':6} {rupiah_ringkas(lo * KURS_IDR[0]):<11} {rupiah_ringkas(hi * KURS_IDR[0])}")
+        baris.append(f"{'':6} {tanggal(lo_tgl):<11} {tanggal(hi_tgl)}")
+        # Emoji tampil selebar 2 huruf, jadi kolomnya dilebarkan 10 (bukan 11)
+        rendah = f"{panah(lo, harga)} {persen(lo, harga)}"
+        baris.append(f"{'':6} {rendah:<10} {panah(hi, harga)} {persen(hi, harga)}")
+    return "<pre>" + "\n".join(baris) + "</pre>"
+
+
+def baris_kaki(sekarang, sumber, k=None, sym=None):
+    kaki = []
+    if k:
+        halaman = f"https://coinmarketcap.com/currencies/{k['halaman']}/"
+        kaki.append(f'🔗 Sumber: CoinMarketCap · <a href="{halaman}">grafik {sym}</a> · '
+                    f'<a href="{halaman}historical-data/">data harian</a>')
+    kurs = f"1 USD = {rupiah(KURS_IDR[0])} · " if KURS_IDR else ""
+    catatan = "" if sumber == "CoinMarketCap" else f" · harga: {sumber}"
+    kaki.append(f"💱 <i>{kurs}{jam_wib(sekarang)}{catatan}</i>")
+    return kaki
+
+
+def susun_pesan(sym, k, harga, kejadian, level, fg, sekarang, sumber):
+    """(bagian atas untuk keterangan foto, bagian bawah berisi tabel tahun dan sumber)."""
+    atas = [label_fg(fg), "", f"🪙 <b>{sym}  {uang(harga)}</b>"]
     if KURS_IDR:
-        bawah.append(f"<i>Kurs hari ini: 1 USD = {rupiah(KURS_IDR[0])} ({KURS_IDR[1]})</i>")
-    bawah.append(f"<i>{jam_wib(sekarang)} · harga sekarang: {sumber}</i>")
+        atas.append(f"      ≈ {rupiah(harga * KURS_IDR[0])}")
+    for x in kejadian:
+        atas += ["", f"⚠️ {x['teks']}"]
+    bawah_lv, atas_lv = level_terdekat(harga, level)
+    if bawah_lv or atas_lv:
+        atas += ["", "📍 <b>Level terdekat</b>"]
+        atas += [f"   {panah(x[1], harga)} {x[0]}  {uang(x[1])}  ({persen(x[1], harga)})"
+                 for x in (atas_lv, bawah_lv) if x]
+
+    bawah = [f"📅 <b>Low &amp; Peak {sym} per tahun</b>",
+             f"💰 Harga sekarang: <b>{usd_idr(harga)}</b>",
+             tabel_level(level, harga, {x["tahun"] for x in kejadian})]
+    bawah += baris_kaki(sekarang, sumber, k, sym)
     return "\n".join(atas), "\n".join(bawah)
 
 
@@ -422,14 +482,11 @@ def susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber, judul=Tr
             continue
         st = status["koin"].get(sym) or status_awal(sekarang.year)
         bawah_lv, atas_lv = level_terdekat(harga[sym], daftar_level(riwayat["koin"].get(sym, {}), st, sekarang.year))
-        detail = " · ".join(f"{panah} {x[0]} ({persen(x[1], harga[sym])})"
-                            for panah, x in (("↓", bawah_lv), ("↑", atas_lv)) if x)
-        baris.append(f"<b>{sym}</b> {usd_idr(harga[sym])}\n    {detail}")
+        detail = "  ".join(f"{panah(x[1], harga[sym])} {x[0]} {persen(x[1], harga[sym])}"
+                           for x in (atas_lv, bawah_lv) if x)
+        baris.append(f"🪙 <b>{sym}</b>  {usd_idr(harga[sym])}\n      {detail}")
     baris.append("")
-    if KURS_IDR:
-        baris.append(f"<i>Kurs: 1 USD = {rupiah(KURS_IDR[0])} ({KURS_IDR[1]})</i>")
-    baris.append(f"<i>{jam_wib(sekarang)} · {sumber}</i>")
-    return "\n".join(baris)
+    return "\n".join(baris + baris_kaki(sekarang, sumber))
 
 
 def buat_grafik(nama, *args):
@@ -654,19 +711,17 @@ def main():
     fg = ambil_fear_greed()
     gagal_kirim = False
 
-    # Fear & Greed berubah >= FG_LANGKAH poin
-    fg_lalu = periksa_fg(fg, status, sekarang)
-    if fg_lalu or (tes and fg):
-        atas = label_fg(fg)
-        if fg_lalu:
-            atas += (f"\n⚠️ Berubah {fg['skor'] - fg_lalu['skor']:+d} poin dari {fg_lalu['skor']}/100 "
-                     f"({html.escape(fg_lalu['nama'])}), {jam_wib(datetime.fromisoformat(fg_lalu['waktu']))}")
+    # Fear & Greed: bergeser >= FG_LANGKAH poin, atau menyentuh ambang ekstrem
+    fg_lalu = status.get("fg")
+    fg_baru, alasan = periksa_fg(fg, status, sekarang)
+    if alasan or (tes and fg):
+        atas = "\n".join([label_fg(fg), ""] + [a if a.startswith("🚨") else f"⚠️ {a}" for a in alasan])
         png = buat_grafik("grafik_fg", fg["riwayat"], fg["skor"], fg["nama"],
-                          fg_lalu["skor"] if fg_lalu else None, fg["sumber"], BULAN)
+                          fg_lalu["skor"] if alasan else None, fg["sumber"], BULAN)
         bawah = susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber, judul=False)
-        if kirim_laporan(atas, bawah, png, kering, "fear_greed.png"):
-            if fg_lalu:
-                status["fg"] = catatan_fg(fg, sekarang)
+        if kirim_laporan(atas.strip(), bawah, png, kering, "fear_greed.png"):
+            if fg_baru:
+                status["fg"] = fg_baru
         else:
             gagal_kirim = True
 
