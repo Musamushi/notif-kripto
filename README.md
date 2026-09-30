@@ -1,14 +1,29 @@
 # Notif Kripto
 
-Memantau BTC, ETH, XRP, LTC, ADA, XLM di CoinMarketCap tiap 15 menit, lalu mengirim
-pesan Telegram bila harga:
+Memantau koin pilihan di CoinMarketCap tiap 15 menit (awalnya BTC, ETH, XRP, LTC, ADA, XLM),
+lalu mengirim grafik + pesan Telegram bila:
 
-- menyentuh **Low** atau **Peak** salah satu tahun sebelumnya (sejak 2017), atau
-- mencetak **Low baru** atau **Peak baru** tahun ini.
+- harga menyentuh **Low** atau **Peak** salah satu tahun sebelumnya (sejak 2017),
+- harga mencetak **Low baru** atau **Peak baru** tahun ini, atau
+- indeks **Fear & Greed** berubah 10 poin atau lebih dari nilai terakhir yang dilaporkan.
 
-Pesan berisi indeks Fear & Greed, harga sekarang, level terdekat, dan daftar
-Low/Peak setiap tahun. Setiap harga ditulis dalam dolar diikuti rupiahnya, dengan kurs
-USD→IDR hari ini dari CoinMarketCap (cadangan: Yahoo). Peringatan tetap dihitung dalam dolar. Pengaturan (daftar koin, toleransi, dll.) ada di bagian atas `pantau.py`.
+Pesan berisi grafik Low/Peak per tahun dan harga 1 tahun terakhir, indeks Fear & Greed,
+harga sekarang, level terdekat, dan daftar Low/Peak setiap tahun. Setiap harga ditulis dalam dolar diikuti rupiahnya, dengan kurs
+USD→IDR hari ini dari CoinMarketCap (cadangan: Yahoo). Peringatan tetap dihitung dalam dolar. Pengaturan (toleransi, dll.) ada di bagian atas `pantau.py`.
+
+## Perintah Telegram
+
+| Perintah | Fungsi |
+|---|---|
+| `/cek` | ringkasan harga semua koin |
+| `/cek XRP` | grafik dan detail satu koin |
+| `/daftar` | koin yang sedang dipantau |
+| `/tambah SOL` | tambah koin (boleh beberapa: `/tambah SOL DOGE`) |
+| `/hapus XLM` | berhenti memantau koin |
+| `/bantuan` | cara pakai |
+
+Perintah dibaca setiap pemeriksaan, jadi balasannya bisa datang beberapa menit kemudian.
+Hanya pesan dari `TELEGRAM_CHAT_ID` yang dilayani. Daftar koin tersimpan di `data/koin.json`.
 
 ## 1. Buat bot Telegram
 
@@ -29,7 +44,7 @@ USD→IDR hari ini dari CoinMarketCap (cadangan: Yahoo). Peringatan tetap dihitu
    - `TELEGRAM_TOKEN`: token dari BotFather
    - `TELEGRAM_CHAT_ID`: chat id dari langkah 1
 3. **Actions** → pilih **Pantau Kripto** → **Run workflow** → mode **tes**.
-   Kalau berhasil, pesan ringkasan keenam koin masuk ke Telegram.
+   Kalau berhasil, grafik Fear & Greed dan grafik setiap koin masuk ke Telegram.
 
 Setelah itu program berjalan sendiri tiap 15 menit.
 
@@ -44,8 +59,9 @@ Catatan:
 ## Uji di komputer sendiri
 
 ```
-python pantau.py --kering        # tampilkan pesan di layar, tidak dikirim
-python pantau.py --tes           # kirim ringkasan semua koin ke Telegram
+pip install -r requirements.txt   # sekali saja, untuk grafik
+python pantau.py --kering        # tampilkan pesan di layar, grafik disimpan ke folder pratinjau
+python pantau.py --tes           # kirim laporan semua koin ke Telegram
 ```
 
 ## Cara kerja singkat

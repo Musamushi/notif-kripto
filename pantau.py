@@ -1,19 +1,20 @@
 """Pantau harga kripto di CoinMarketCap dan kirim peringatan ke Telegram.
 
 Dijalankan berkala (GitHub Actions, tiap 15 menit). Setiap kali jalan:
-1. ambil harga koin dan indeks Fear & Greed dari CoinMarketCap,
-2. bandingkan dengan Low/Peak setiap tahun (dari riwayat harian CoinMarketCap),
-3. kirim pesan Telegram bila harga menyentuh Low/Peak tahun-tahun sebelumnya,
-   atau mencetak Low/Peak baru tahun ini.
+1. baca perintah Telegram (/tambah, /hapus, /daftar, /cek, /bantuan),
+2. ambil harga koin dan indeks Fear & Greed dari CoinMarketCap,
+3. bandingkan dengan Low/Peak setiap tahun (dari riwayat harian CoinMarketCap),
+4. kirim grafik + pesan bila harga menyentuh Low/Peak tahun-tahun sebelumnya,
+   mencetak Low/Peak baru tahun ini, atau Fear & Greed berubah >= 10 poin.
 
 Pemakaian:
     python pantau.py            jalan normal
-    python pantau.py --kering   cetak pesan saja; tidak kirim, status tidak disimpan
-    python pantau.py --tes      kirim ringkasan semua koin (uji Telegram)
+    python pantau.py --kering   cetak pesan saja (grafik disimpan ke folder pratinjau); tidak kirim/simpan
+    python pantau.py --tes      kirim laporan semua koin (uji Telegram)
     python pantau.py --chat-id  tampilkan chat id Telegram (setelah Anda chat ke bot)
 
 Rahasia dibaca dari environment variable TELEGRAM_TOKEN dan TELEGRAM_CHAT_ID.
-Hanya memakai pustaka bawaan Python, tidak perlu pip install.
+Grafik butuh matplotlib (requirements.txt); tanpa itu pesan tetap terkirim sebagai teks.
 """
 import calendar
 import copy
@@ -22,57 +23,94 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # ---------------------------------------------------------------- Pengaturan
-KOIN = {"BTC": 1, "ETH": 1027, "XRP": 52, "LTC": 2, "ADA": 2010, "XLM": 512}  # id CoinMarketCap
-# Nama halaman koin: https://coinmarketcap.com/currencies/<nama>/
-HALAMAN = {"BTC": "bitcoin", "ETH": "ethereum", "XRP": "xrp", "LTC": "litecoin", "ADA": "cardano", "XLM": "stellar"}
+# Koin awal; setelah data/koin.json terbentuk, daftar koin diatur lewat Telegram (/tambah, /hapus).
+KOIN_AWAL = {
+    "BTC": {"id": 1, "halaman": "bitcoin", "nama": "Bitcoin"},
+    "ETH": {"id": 1027, "halaman": "ethereum", "nama": "Ethereum"},
+    "XRP": {"id": 52, "halaman": "xrp", "nama": "XRP"},
+    "LTC": {"id": 2, "halaman": "litecoin", "nama": "Litecoin"},
+    "ADA": {"id": 2010, "halaman": "cardano", "nama": "Cardano"},
+    "XLM": {"id": 512, "halaman": "stellar", "nama": "Stellar"},
+}
 TAHUN_MULAI = 2017          # tahun paling awal yang dipantau dan ditampilkan
 TOLERANSI = 0.005           # dianggap "menyentuh" bila harga sedekat 0,5% dari level
 JARAK_SIAGA_ULANG = 0.05    # level yang sudah dilaporkan baru aktif lagi setelah harga menjauh 5%
 LANGKAH_LOW_BARU = 0.03     # selama terus mencetak Low/Peak baru, lapor lagi tiap bergerak 3% lagi
 MIN_HARI_TAHUN_INI = 14     # awal Januari: Low/Peak baru tahun ini baru dilaporkan setelah ada 14 hari data
 LAPOR_PEAK_TAHUN_INI = True   # False = hanya lapor Low baru tahun ini
+FG_LANGKAH = 10             # lapor bila Fear & Greed berubah sebanyak ini dari nilai terakhir yang dilaporkan
 
 WIB = timezone(timedelta(hours=7))
-FOLDER_DATA = Path(__file__).resolve().parent / "data"
+FOLDER = Path(__file__).resolve().parent
+FOLDER_DATA = FOLDER / "data"
+FOLDER_PRATINJAU = FOLDER / "pratinjau"
 BERKAS_RIWAYAT = FOLDER_DATA / "riwayat.json"
 BERKAS_STATUS = FOLDER_DATA / "status.json"
+BERKAS_KOIN = FOLDER_DATA / "koin.json"
 CMC = "https://api.coinmarketcap.com/data-api"
 USD, IDR = "2781", "2794"  # id mata uang USD dan IDR di CoinMarketCap
 KURS_IDR = None  # (rupiah per 1 USD, sumber); diisi ambil_harga()
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/124 Safari/537.36"}
 BULAN = "Jan Feb Mar Apr Mei Jun Jul Agu Sep Okt Nov Des".split()
+VERSI_PERINTAH = 1  # naikkan bila daftar PERINTAH berubah, supaya menu Telegram diperbarui
+PERINTAH = [
+    ("cek", "Ringkasan semua koin; /cek XRP = grafik XRP"),
+    ("daftar", "Daftar koin yang dipantau"),
+    ("tambah", "Tambah koin, contoh: /tambah SOL"),
+    ("hapus", "Hapus koin, contoh: /hapus XLM"),
+    ("bantuan", "Cara pakai bot ini"),
+]
+BANTUAN = (
+    "<b>Perintah</b>\n"
+    "/cek - ringkasan harga semua koin\n"
+    "/cek XRP - grafik dan detail satu koin\n"
+    "/daftar - koin yang sedang dipantau\n"
+    "/tambah SOL - tambah koin (boleh beberapa: /tambah SOL DOGE)\n"
+    "/hapus XLM - berhenti memantau koin\n\n"
+    "Perintah dibaca setiap pemeriksaan (sekitar tiap 15 menit), jadi balasannya bisa "
+    "datang beberapa menit kemudian.\n\n"
+    "Peringatan otomatis dikirim bila harga menyentuh Low/Peak tahun sebelumnya, mencetak "
+    f"Low/Peak baru tahun ini, atau Fear &amp; Greed berubah {FG_LANGKAH} poin."
+)
 
 
 # ---------------------------------------------------------------- Ambil data
-def ambil_json(url, data=None, coba=3):
+def ambil_json(url, data=None, kepala=None, coba=3):
     for ke in range(coba):
         try:
-            req = urllib.request.Request(url, data=data, headers=UA)
+            req = urllib.request.Request(url, data=data, headers={**UA, **(kepala or {})})
             with urllib.request.urlopen(req, timeout=30) as r:
                 return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            if e.code < 500 and e.code != 429:  # kesalahan permintaan: percuma diulang
+                raise
+            if ke == coba - 1:
+                raise
         except Exception:
             if ke == coba - 1:
                 raise
-            time.sleep(2 * (ke + 1))
+        time.sleep(2 * (ke + 1))
 
 
-def ambil_harga():
+def ambil_harga(koin):
     """Harga USD tiap koin dan kurs USD->IDR. Utama CoinMarketCap, cadangan Yahoo Finance."""
     global KURS_IDR
     harga, sumber, kurs = {}, "CoinMarketCap", []
     try:
-        ids = ",".join(str(i) for i in KOIN.values())
+        ids = ",".join(str(k["id"]) for k in koin.values())
         j = ambil_json(f"{CMC}/v3/cryptocurrency/quote/latest?id={ids}&convertId={USD},{IDR}")
         per_id = {d["id"]: d for d in j["data"]}
-        for sym, id_koin in KOIN.items():
-            d = per_id.get(id_koin)
+        for sym, k in koin.items():
+            d = per_id.get(k["id"])
             if not d:
                 continue
             q = {q.get("name"): float(q["price"]) for q in d["quotes"]}
@@ -89,7 +127,7 @@ def ambil_harga():
             KURS_IDR = (float(j["chart"]["result"][0]["meta"]["regularMarketPrice"]), "Yahoo")
         except Exception as e:
             print(f"[!] Kurs rupiah gagal: {e}")
-    for sym in KOIN:
+    for sym in koin:
         if sym in harga:
             continue
         try:
@@ -102,29 +140,47 @@ def ambil_harga():
 
 
 def ambil_fear_greed():
-    """(skor, keterangan, sumber). Utama CoinMarketCap, cadangan alternative.me."""
+    """{skor, nama, sumber, riwayat=[(datetime, skor)] 90 hari}. Utama CoinMarketCap, cadangan alternative.me."""
     try:
         akhir = int(time.time())
-        j = ambil_json(f"{CMC}/v3/fear-greed/chart?start={akhir - 3 * 86400}&end={akhir}")
-        d = j["data"]["dataList"][-1]
-        return int(d["score"]), d["name"], "CoinMarketCap"
+        daftar = ambil_json(f"{CMC}/v3/fear-greed/chart?start={akhir - 90 * 86400}&end={akhir}")["data"]["dataList"]
+        return {"skor": int(daftar[-1]["score"]), "nama": daftar[-1]["name"], "sumber": "CoinMarketCap",
+                "riwayat": [(datetime.fromtimestamp(int(d["timestamp"]), timezone.utc), int(d["score"]))
+                            for d in daftar]}
     except Exception as e:
         print(f"[!] Fear & Greed CoinMarketCap gagal: {e}")
     try:
-        d = ambil_json("https://api.alternative.me/fng/?limit=1")["data"][0]
-        return int(d["value"]), d["value_classification"], "alternative.me"
+        daftar = ambil_json("https://api.alternative.me/fng/?limit=90")["data"][::-1]
+        return {"skor": int(daftar[-1]["value"]), "nama": daftar[-1]["value_classification"],
+                "sumber": "alternative.me",
+                "riwayat": [(datetime.fromtimestamp(int(d["timestamp"]), timezone.utc), int(d["value"]))
+                            for d in daftar]}
     except Exception as e:
         print(f"[!] Fear & Greed alternative.me juga gagal: {e}")
         return None
 
 
-def ambil_tahun(id_koin, tahun, sekarang):
-    """Low dan Peak satu tahun dari candle harian CoinMarketCap (None bila belum ada data)."""
-    awal = calendar.timegm((tahun, 1, 1, 0, 0, 0))
-    akhir = min(calendar.timegm((tahun, 12, 31, 23, 59, 59)), int(sekarang.timestamp()))
+def ambil_candle(id_koin, akhir):
+    """±400 candle harian CoinMarketCap yang berakhir di `akhir` (epoch detik)."""
     j = ambil_json(f"{CMC}/v3.1/cryptocurrency/historical?id={id_koin}&convertId={USD}"
-                   f"&timeStart={awal}&timeEnd={akhir}&interval=1d")
-    baris = [q for q in j["data"]["quotes"] if q["timeOpen"].startswith(str(tahun))]
+                   f"&timeStart={akhir - 400 * 86400}&timeEnd={akhir}&interval=1d")
+    return j["data"]["quotes"]
+
+
+def ambil_harian(id_koin, sekarang):
+    """[(datetime, close)] 365 hari terakhir, untuk grafik."""
+    try:
+        return [(datetime.fromisoformat(q["timeOpen"][:10]), q["quote"]["close"])
+                for q in ambil_candle(id_koin, int(sekarang.timestamp()))][-365:]
+    except Exception as e:
+        print(f"[!] Data harian untuk grafik gagal: {e}")
+        return []
+
+
+def ambil_tahun(id_koin, tahun, sekarang):
+    """Low dan Peak satu tahun dari candle harian CoinMarketCap."""
+    akhir = min(calendar.timegm((tahun, 12, 31, 23, 59, 59)), int(sekarang.timestamp()))
+    baris = [q for q in ambil_candle(id_koin, akhir) if q["timeOpen"].startswith(str(tahun))]
     if not baris:
         return {"kosong": True, "lengkap": tahun < sekarang.year}
     lo = min(baris, key=lambda q: q["quote"]["low"])
@@ -137,11 +193,11 @@ def ambil_tahun(id_koin, tahun, sekarang):
     }
 
 
-def perbarui_riwayat(riwayat, sekarang):
+def perbarui_riwayat(riwayat, koin, sekarang):
     """Tahun lampau cukup diambil sekali; tahun berjalan diperbarui sekali sehari."""
     hari_ini = sekarang.strftime("%Y-%m-%d")
     semua_berhasil = True
-    for sym, id_koin in KOIN.items():
+    for sym, k in koin.items():
         rk = riwayat["koin"].setdefault(sym, {})
         for tahun in range(TAHUN_MULAI, sekarang.year + 1):
             ent = rk.get(str(tahun))
@@ -150,13 +206,31 @@ def perbarui_riwayat(riwayat, sekarang):
             if tahun == sekarang.year and ent and riwayat.get("diperbarui") == hari_ini:
                 continue
             try:
-                rk[str(tahun)] = ambil_tahun(id_koin, tahun, sekarang)
+                rk[str(tahun)] = ambil_tahun(k["id"], tahun, sekarang)
                 time.sleep(0.3)
             except Exception as e:
                 semua_berhasil = False
                 print(f"[!] Riwayat {sym} {tahun} gagal: {e}")
     if semua_berhasil:
         riwayat["diperbarui"] = hari_ini
+
+
+_PETA_KOIN = None
+
+
+def cari_koin(teks):
+    """Cari koin di CoinMarketCap dari simbol (SOL) atau nama halaman (solana).
+    Simbol kembar: dipilih yang peringkatnya paling atas."""
+    global _PETA_KOIN
+    if _PETA_KOIN is None:
+        _PETA_KOIN = ambil_json(f"{CMC}/v3/map/all?listing_status=active&start=1&limit=10000")["data"]["cryptoCurrencyMap"]
+    kunci = teks.strip().lower()
+    cocok = ([c for c in _PETA_KOIN if c["symbol"].lower() == kunci]
+             or [c for c in _PETA_KOIN if c["slug"] == kunci or c["name"].lower() == kunci])
+    if not cocok:
+        return None
+    c = min(cocok, key=lambda c: c.get("rank") or 10 ** 9)
+    return c["symbol"].upper(), {"id": c["id"], "halaman": c["slug"], "nama": c["name"]}
 
 
 # ---------------------------------------------------------------- Pemeriksaan
@@ -230,6 +304,21 @@ def periksa(sym, harga, rk, st, sekarang):
     return kejadian
 
 
+def periksa_fg(fg, status, sekarang):
+    """Kembalikan nilai terakhir yang dilaporkan bila Fear & Greed sudah bergeser >= FG_LANGKAH."""
+    if not fg:
+        return None
+    lama = status.get("fg")
+    if not lama or lama.get("sumber") != fg["sumber"]:  # awal, atau ganti sumber (skalanya beda): catat saja
+        status["fg"] = catatan_fg(fg, sekarang)
+        return None
+    return lama if abs(fg["skor"] - lama["skor"]) >= FG_LANGKAH else None
+
+
+def catatan_fg(fg, sekarang):
+    return {"skor": fg["skor"], "nama": fg["nama"], "sumber": fg["sumber"], "waktu": sekarang.isoformat()}
+
+
 # ---------------------------------------------------------------- Pesan
 def uang(x):
     if x >= 1000:
@@ -256,13 +345,17 @@ def tanggal(iso):
     return f"{iso[8:10]} {BULAN[int(iso[5:7]) - 1]}"
 
 
+def jam_wib(waktu):
+    return f"{waktu.astimezone(WIB):%d-%m-%Y %H:%M} WIB"
+
+
 def label_fg(fg):
     if not fg:
         return "Fear &amp; Greed: tidak tersedia"
-    skor, nama, sumber = fg
+    skor = fg["skor"]
     emoji = "😱" if skor < 25 else "😨" if skor < 45 else "😐" if skor <= 55 else "🙂" if skor <= 75 else "🤑"
-    catatan = "" if sumber == "CoinMarketCap" else f" <i>({sumber})</i>"
-    return f"{emoji} <b>Fear &amp; Greed: {skor}/100 ({html.escape(nama)})</b>{catatan}"
+    catatan = "" if fg["sumber"] == "CoinMarketCap" else f" <i>({fg['sumber']})</i>"
+    return f"{emoji} <b>Fear &amp; Greed: {skor}/100 ({html.escape(fg['nama'])})</b>{catatan}"
 
 
 def daftar_level(rk, st, tahun_ini):
@@ -279,60 +372,237 @@ def daftar_level(rk, st, tahun_ini):
     return hasil
 
 
-def susun_pesan(sym, harga, kejadian, rk, st, fg, sekarang, sumber):
-    level = daftar_level(rk, st, sekarang.year)
-    ditandai = {k["tahun"] for k in kejadian}
-    baris = [label_fg(fg), "", f"<b>{sym}  {usd_idr(harga)}</b>"]
-    baris += [f"⚠️ {k['teks']}" for k in kejadian]
-
+def level_terdekat(harga, level):
+    """((nama, nilai) di bawah harga, (nama, nilai) di atas harga); None bila tidak ada."""
     semua = [(f"Low {t}", lo) for t, lo, _, _, _ in level] + [(f"Peak {t}", hi) for t, _, _, hi, _ in level]
     # Pakai < dan >: Low/Peak tahun ini yang baru saja tercipta sama dengan harga, jadi tidak ikut
     bawah = max((x for x in semua if x[1] < harga), key=lambda x: x[1], default=None)
     atas = min((x for x in semua if x[1] > harga), key=lambda x: x[1], default=None)
-    terdekat = []
-    if bawah:
-        terdekat.append(f"↓ {bawah[0]} {usd_idr(bawah[1])} ({(bawah[1] / harga - 1) * 100:+.1f}%)")
-    if atas:
-        terdekat.append(f"↑ {atas[0]} {usd_idr(atas[1])} ({(atas[1] / harga - 1) * 100:+.1f}%)")
-    if terdekat:
-        baris.append("Terdekat:\n" + "\n".join(terdekat))
+    return bawah, atas
 
-    baris.append("")
+
+def persen(nilai, harga):
+    return f"{(nilai / harga - 1) * 100:+.1f}%"
+
+
+def susun_pesan(sym, k, harga, kejadian, level, fg, sekarang, sumber):
+    """(bagian atas untuk keterangan foto, bagian bawah berisi daftar tahun dan sumber)."""
+    ditandai = {x["tahun"] for x in kejadian}
+    atas = [label_fg(fg), "", f"<b>{sym}  {usd_idr(harga)}</b>"]
+    atas += [f"⚠️ {x['teks']}" for x in kejadian]
+    bawah_lv, atas_lv = level_terdekat(harga, level)
+    terdekat = []
+    if bawah_lv:
+        terdekat.append(f"↓ {bawah_lv[0]} {usd_idr(bawah_lv[1])} ({persen(bawah_lv[1], harga)})")
+    if atas_lv:
+        terdekat.append(f"↑ {atas_lv[0]} {usd_idr(atas_lv[1])} ({persen(atas_lv[1], harga)})")
+    if terdekat:
+        atas.append("Terdekat:\n" + "\n".join(terdekat))
+
+    bawah = []
     for tahun, lo, lo_tgl, hi, hi_tgl in level:
         tanda = "👉 " if tahun in ditandai else ""
-        baris.append(f"{tanda}[Low {tahun}] {usd_idr(lo)} ({tanggal(lo_tgl)}) - "
+        bawah.append(f"{tanda}[Low {tahun}] {usd_idr(lo)} ({tanggal(lo_tgl)}) - "
                      f"[Peak {tahun}] {usd_idr(hi)} ({tanggal(hi_tgl)})")
-    baris.append("")
-    halaman = f"https://coinmarketcap.com/currencies/{HALAMAN.get(sym, sym.lower())}/"
-    baris.append(f"📊 Sumber Low/Peak: CoinMarketCap, data harian (high/low per hari) · "
+    bawah.append("")
+    halaman = f"https://coinmarketcap.com/currencies/{k['halaman']}/"
+    bawah.append(f"📊 Sumber Low/Peak: CoinMarketCap, data harian (high/low per hari) · "
                  f'<a href="{halaman}">grafik {sym}</a> · <a href="{halaman}historical-data/">data harian</a>')
     if KURS_IDR:
-        baris.append(f"<i>Kurs hari ini: 1 USD = {rupiah(KURS_IDR[0])} ({KURS_IDR[1]})</i>")
-    baris.append(f"<i>{sekarang.astimezone(WIB):%d-%m-%Y %H:%M} WIB · harga sekarang: {sumber}</i>")
+        bawah.append(f"<i>Kurs hari ini: 1 USD = {rupiah(KURS_IDR[0])} ({KURS_IDR[1]})</i>")
+    bawah.append(f"<i>{jam_wib(sekarang)} · harga sekarang: {sumber}</i>")
+    return "\n".join(atas), "\n".join(bawah)
+
+
+def susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber, judul=True):
+    baris = [label_fg(fg), ""] if judul else []
+    for sym in koin:
+        if sym not in harga:
+            baris.append(f"<b>{sym}</b> harga tidak tersedia")
+            continue
+        st = status["koin"].get(sym) or status_awal(sekarang.year)
+        bawah_lv, atas_lv = level_terdekat(harga[sym], daftar_level(riwayat["koin"].get(sym, {}), st, sekarang.year))
+        detail = " · ".join(f"{panah} {x[0]} ({persen(x[1], harga[sym])})"
+                            for panah, x in (("↓", bawah_lv), ("↑", atas_lv)) if x)
+        baris.append(f"<b>{sym}</b> {usd_idr(harga[sym])}\n    {detail}")
+    baris.append("")
+    if KURS_IDR:
+        baris.append(f"<i>Kurs: 1 USD = {rupiah(KURS_IDR[0])} ({KURS_IDR[1]})</i>")
+    baris.append(f"<i>{jam_wib(sekarang)} · {sumber}</i>")
     return "\n".join(baris)
 
 
-# ---------------------------------------------------------------- Telegram
-def kirim_telegram(teks):
-    token, chat_id = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        print("[!] TELEGRAM_TOKEN / TELEGRAM_CHAT_ID belum diisi, pesan tidak terkirim.")
-        return False
-    data = urllib.parse.urlencode({"chat_id": chat_id, "text": teks, "parse_mode": "HTML",
-                                   "disable_web_page_preview": "true"}).encode()
+def buat_grafik(nama, *args):
+    """Panggil grafik.<nama>(...); None bila matplotlib tidak ada atau gagal (pesan tetap terkirim)."""
     try:
-        # Jangan cetak URL-nya: di dalamnya ada token.
-        return bool(ambil_json(f"https://api.telegram.org/bot{token}/sendMessage", data=data).get("ok"))
+        import grafik
+        return getattr(grafik, nama)(*args)
     except Exception as e:
-        print(f"[!] Kirim Telegram gagal: {type(e).__name__} {getattr(e, 'code', '')}")
+        print(f"[!] Grafik gagal dibuat: {type(e).__name__}: {e}")
+        return None
+
+
+def grafik_koin(sym, k, harga, kejadian, level, sekarang):
+    return buat_grafik("grafik_koin", sym, harga, level, {x["tahun"] for x in kejadian}, sekarang.year,
+                       ambil_harian(k["id"], sekarang), level_terdekat(harga, level), uang, BULAN)
+
+
+# ---------------------------------------------------------------- Telegram
+def telegram(metode, data=None, foto=None):
+    """Panggil Bot API. Melempar RuntimeError berisi keterangan dari Telegram bila gagal."""
+    token = os.environ.get("TELEGRAM_TOKEN")
+    if not token:
+        raise RuntimeError("TELEGRAM_TOKEN belum diisi")
+    url = f"https://api.telegram.org/bot{token}/{metode}"  # jangan pernah dicetak: berisi token
+    data = {k: v if isinstance(v, str) else json.dumps(v) for k, v in (data or {}).items()}
+    if foto:
+        batas = uuid.uuid4().hex
+        bagian = [f'--{batas}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode()
+                  for k, v in data.items()]
+        bagian.append(f'--{batas}\r\nContent-Disposition: form-data; name="photo"; filename="grafik.png"\r\n'
+                      f"Content-Type: image/png\r\n\r\n".encode() + foto + b"\r\n")
+        badan, kepala = b"".join(bagian) + f"--{batas}--\r\n".encode(), {
+            "Content-Type": f"multipart/form-data; boundary={batas}"}
+    else:
+        badan, kepala = urllib.parse.urlencode(data).encode(), None
+    try:
+        hasil = ambil_json(url, data=badan, kepala=kepala)
+    except urllib.error.HTTPError as e:
+        try:
+            keterangan = json.loads(e.read()).get("description", "")
+        except Exception:
+            keterangan = ""
+        raise RuntimeError(f"HTTP {e.code} {keterangan}") from None
+    except Exception as e:
+        raise RuntimeError(type(e).__name__) from None
+    if not hasil.get("ok"):
+        raise RuntimeError(hasil.get("description", "gagal"))
+    return hasil.get("result")
+
+
+def kirim_teks(teks):
+    try:
+        telegram("sendMessage", {"chat_id": os.environ.get("TELEGRAM_CHAT_ID", ""), "text": teks,
+                                 "parse_mode": "HTML", "disable_web_page_preview": "true"})
+        return True
+    except RuntimeError as e:
+        print(f"[!] Kirim Telegram gagal: {e}")
         return False
+
+
+def kirim_foto(png, keterangan):
+    try:
+        telegram("sendPhoto", {"chat_id": os.environ.get("TELEGRAM_CHAT_ID", ""), "caption": keterangan,
+                               "parse_mode": "HTML"}, foto=png)
+        return True
+    except RuntimeError as e:
+        print(f"[!] Kirim foto Telegram gagal: {e}")
+        return False
+
+
+def kirim_laporan(atas, bawah, png, kering, nama_berkas):
+    """Foto dengan keterangan `atas`, lalu pesan `bawah`. Tanpa foto: satu pesan teks."""
+    if kering:
+        print("-" * 60 + "\n" + atas + "\n\n" + bawah + "\n" + "-" * 60)
+        if png:
+            FOLDER_PRATINJAU.mkdir(exist_ok=True)
+            (FOLDER_PRATINJAU / nama_berkas).write_bytes(png)
+            print(f"(grafik: pratinjau/{nama_berkas})")
+        return True
+    lengkap = atas + ("\n\n" + bawah if bawah else "")
+    if png:
+        muat = len(atas) <= 1024  # batas keterangan foto di Telegram
+        if kirim_foto(png, atas if muat else ""):
+            return kirim_teks(bawah if muat else lengkap) if (bawah or not muat) else True
+    return kirim_teks(lengkap)
+
+
+def daftarkan_perintah(status):
+    """Isi menu perintah bot (muncul saat mengetik /). Cukup sekali per versi."""
+    if status.get("versi_perintah") == VERSI_PERINTAH:
+        return
+    try:
+        telegram("setMyCommands", {"commands": [{"command": c, "description": d} for c, d in PERINTAH]})
+        status["versi_perintah"] = VERSI_PERINTAH
+    except RuntimeError as e:
+        print(f"[!] Daftar perintah gagal: {e}")
+
+
+def teks_daftar(koin):
+    return "<b>Koin yang dipantau</b>\n" + "\n".join(
+        f"• {sym} ({html.escape(k['nama'])})" for sym, k in koin.items())
+
+
+def proses_perintah(koin, riwayat, status, antrean_cek):
+    """Baca pesan baru ke bot. Hanya pesan dari TELEGRAM_CHAT_ID yang dilayani."""
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not (chat_id and os.environ.get("TELEGRAM_TOKEN")):
+        return
+    try:
+        pembaruan = telegram("getUpdates", {"offset": status.get("telegram_offset", 0), "timeout": 0,
+                                            "allowed_updates": ["message"]})
+    except RuntimeError as e:
+        print(f"[!] Baca perintah Telegram gagal: {e}")
+        return
+    for u in pembaruan:
+        status["telegram_offset"] = u["update_id"] + 1
+        m = u.get("message") or {}
+        if str(m.get("chat", {}).get("id")) != str(chat_id):
+            continue
+        kata = (m.get("text") or "").split()
+        if not kata:
+            continue
+        perintah = kata[0].lstrip("/").split("@")[0].lower()
+        argumen = [a.strip(",;") for a in kata[1:] if a.strip(",;")]
+        print(f"Perintah: {perintah} {' '.join(argumen)}")
+
+        if perintah in ("start", "bantuan", "help"):
+            kirim_teks(BANTUAN)
+        elif perintah == "daftar":
+            kirim_teks(teks_daftar(koin))
+        elif perintah == "cek":
+            antrean_cek.update(a.upper() for a in argumen) if argumen else antrean_cek.add("*")
+        elif perintah == "tambah":
+            if not argumen:
+                kirim_teks("Tulis simbol koinnya, contoh: /tambah SOL")
+            for a in argumen:
+                try:
+                    hasil = cari_koin(a)
+                except Exception as e:
+                    kirim_teks(f"Gagal mencari {html.escape(a)} di CoinMarketCap ({type(e).__name__}). Coba lagi nanti.")
+                    continue
+                if not hasil:
+                    kirim_teks(f"❌ {html.escape(a)} tidak ditemukan di CoinMarketCap.")
+                elif hasil[0] in koin:
+                    kirim_teks(f"{hasil[0]} sudah dipantau.")
+                else:
+                    sym, k = hasil
+                    koin[sym] = k
+                    antrean_cek.add(sym)
+                    kirim_teks(f"✅ {sym} ({html.escape(k['nama'])}) ditambahkan. Grafiknya menyusul.\n"
+                               f'<a href="https://coinmarketcap.com/currencies/{k["halaman"]}/">Cek di CoinMarketCap</a>')
+        elif perintah == "hapus":
+            if not argumen:
+                kirim_teks("Tulis simbol koinnya, contoh: /hapus XLM")
+            for a in (a.upper() for a in argumen):
+                if a not in koin:
+                    kirim_teks(f"{html.escape(a)} tidak ada di daftar.")
+                elif len(koin) == 1:
+                    kirim_teks("Minimal harus ada satu koin yang dipantau.")
+                else:
+                    nama = koin.pop(a)["nama"]
+                    riwayat["koin"].pop(a, None)
+                    status["koin"].pop(a, None)
+                    kirim_teks(f"🗑 {a} ({html.escape(nama)}) tidak dipantau lagi.")
+        else:
+            kirim_teks("Perintah tidak dikenal. Ketik /bantuan")
 
 
 def tampilkan_chat_id():
     token = os.environ.get("TELEGRAM_TOKEN")
     if not token:
         sys.exit("Isi dulu TELEGRAM_TOKEN.")
-    hasil = ambil_json(f"https://api.telegram.org/bot{token}/getUpdates").get("result", [])
+    hasil = telegram("getUpdates")
     chat = {u["message"]["chat"]["id"]: u["message"]["chat"] for u in hasil if "message" in u}
     if not chat:
         print("Belum ada pesan. Kirim pesan apa saja ke bot Anda di Telegram, lalu jalankan lagi.")
@@ -348,9 +618,9 @@ def baca(berkas, bawaan):
         return bawaan
 
 
-def simpan(berkas, isi):
+def simpan(berkas, isi, urut=True):
     FOLDER_DATA.mkdir(exist_ok=True)
-    berkas.write_text(json.dumps(isi, indent=1, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    berkas.write_text(json.dumps(isi, indent=1, sort_keys=urut, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def main():
@@ -360,40 +630,71 @@ def main():
     if "--chat-id" in args:
         return tampilkan_chat_id()
     kering, tes = "--kering" in args, "--tes" in args
+    normal = not (kering or tes)
 
     sekarang = datetime.now(timezone.utc)
+    koin = baca(BERKAS_KOIN, None) or copy.deepcopy(KOIN_AWAL)
     riwayat = baca(BERKAS_RIWAYAT, {"diperbarui": None, "koin": {}})
     status = baca(BERKAS_STATUS, {"koin": {}})
+    antrean_cek = set()  # "*" = ringkasan, atau simbol koin
 
-    perbarui_riwayat(riwayat, sekarang)
+    if normal:
+        daftarkan_perintah(status)
+        proses_perintah(koin, riwayat, status, antrean_cek)
+        simpan(BERKAS_KOIN, koin, urut=False)  # urutan koin = urutan tampil di pesan
+
+    perbarui_riwayat(riwayat, koin, sekarang)
     simpan(BERKAS_RIWAYAT, riwayat)
 
-    harga, sumber = ambil_harga()
+    harga, sumber = ambil_harga(koin)
     if not harga:
+        if normal:
+            simpan(BERKAS_STATUS, status)
         sys.exit("[!] Tidak ada harga yang berhasil diambil.")
     fg = ambil_fear_greed()
-
     gagal_kirim = False
-    for sym in KOIN:
+
+    # Fear & Greed berubah >= FG_LANGKAH poin
+    fg_lalu = periksa_fg(fg, status, sekarang)
+    if fg_lalu or (tes and fg):
+        atas = label_fg(fg)
+        if fg_lalu:
+            atas += (f"\n⚠️ Berubah {fg['skor'] - fg_lalu['skor']:+d} poin dari {fg_lalu['skor']}/100 "
+                     f"({html.escape(fg_lalu['nama'])}), {jam_wib(datetime.fromisoformat(fg_lalu['waktu']))}")
+        png = buat_grafik("grafik_fg", fg["riwayat"], fg["skor"], fg["nama"],
+                          fg_lalu["skor"] if fg_lalu else None, fg["sumber"], BULAN)
+        bawah = susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber, judul=False)
+        if kirim_laporan(atas, bawah, png, kering, "fear_greed.png"):
+            if fg_lalu:
+                status["fg"] = catatan_fg(fg, sekarang)
+        else:
+            gagal_kirim = True
+
+    for sym, k in koin.items():
         if sym not in harga:
             continue
         # Status baru disimpan setelah pesannya terkirim, supaya peringatan yang gagal terkirim diulang.
         st = copy.deepcopy(status["koin"].get(sym) or status_awal(sekarang.year))
         rk = riwayat["koin"].get(sym, {})
         kejadian = periksa(sym, harga[sym], rk, st, sekarang)
-        print(f"{sym:4} {uang(harga[sym]):>12}  {len(kejadian)} kejadian")
-        if not (kejadian or tes):
+        print(f"{sym:5} {uang(harga[sym]):>12}  {len(kejadian)} kejadian")
+        if not (kejadian or tes or sym in antrean_cek):
             status["koin"][sym] = st
             continue
-        pesan = susun_pesan(sym, harga[sym], kejadian, rk, st, fg, sekarang, sumber)
-        if kering:
-            print("-" * 60 + "\n" + pesan + "\n" + "-" * 60)
-        elif kirim_telegram(pesan):
+        level = daftar_level(rk, st, sekarang.year)
+        atas, bawah = susun_pesan(sym, k, harga[sym], kejadian, level, fg, sekarang, sumber)
+        png = grafik_koin(sym, k, harga[sym], kejadian, level, sekarang)
+        if kirim_laporan(atas, bawah, png, kering, f"{sym}.png"):
             status["koin"][sym] = st
         else:
             gagal_kirim = True
 
-    if not (kering or tes):
+    for sym in antrean_cek - set(koin) - {"*"}:
+        kirim_teks(f"{html.escape(sym)} tidak ada di daftar. Tambahkan dulu: /tambah {html.escape(sym)}")
+    if "*" in antrean_cek:
+        kirim_teks(susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber))
+
+    if normal:
         simpan(BERKAS_STATUS, status)
     if gagal_kirim:
         sys.exit(1)
