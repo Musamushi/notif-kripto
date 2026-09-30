@@ -2,7 +2,8 @@ name: Pantau Kripto
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # tiap 15 menit (jam UTC); GitHub sering telat beberapa menit
+        # tiap 15 menit, sengaja tidak di menit 0/15/30/45: saat itu antrean GitHub paling padat
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
     inputs:
       mode:
