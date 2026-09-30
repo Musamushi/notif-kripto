@@ -1,0 +1,535 @@
+{
+ "fg": {
+  "ambang": [],
+  "nama": "Greed",
+  "skor": 71,
+  "sumber": "CoinMarketCap",
+  "waktu": "2026-09-30T12:59:33.817896+00:00"
+ },
+ "koin": {
+  "ADA": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2017": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2018": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    0.25439439548825554,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    0.25439439548825554,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  },
+  "BTC": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    85469.20675244664,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    85469.20675244664,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  },
+  "ETH": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    2736.7045082322147,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    2736.7045082322147,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  },
+  "LTC": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2017": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2018": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2019": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2020": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    68.10529539415982,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    68.10529539415982,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  },
+  "XLM": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2017": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2018": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2020": {
+     "siaga": false,
+     "sisi": "atas"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    0.23088584003466933,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    0.23088584003466933,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  },
+  "XRP": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2017": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2018": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2017": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2018": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2019": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    1.5386202198486305,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    1.5386202198486305,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  }
+ },
+ "telegram_offset": 365159259,
+ "versi_perintah": 1
+}

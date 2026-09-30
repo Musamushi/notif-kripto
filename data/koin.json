@@ -1,0 +1,32 @@
+{
+ "BTC": {
+  "id": 1,
+  "halaman": "bitcoin",
+  "nama": "Bitcoin"
+ },
+ "ETH": {
+  "id": 1027,
+  "halaman": "ethereum",
+  "nama": "Ethereum"
+ },
+ "XRP": {
+  "id": 52,
+  "halaman": "xrp",
+  "nama": "XRP"
+ },
+ "LTC": {
+  "id": 2,
+  "halaman": "litecoin",
+  "nama": "Litecoin"
+ },
+ "ADA": {
+  "id": 2010,
+  "halaman": "cardano",
+  "nama": "Cardano"
+ },
+ "XLM": {
+  "id": 512,
+  "halaman": "stellar",
+  "nama": "Stellar"
+ }
+}
