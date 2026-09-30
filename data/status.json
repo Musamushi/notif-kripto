@@ -355,6 +355,69 @@
    ],
    "tahun": 2026
   },
+  "SOL": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2021": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2022": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2023": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2024": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2020": {
+     "siaga": true,
+     "sisi": "atas"
+    },
+    "Peak 2021": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2022": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2023": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2024": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    118.21047985484246,
+    "2026-09-30"
+   ],
+   "peak_teramati": [
+    118.21047985484246,
+    "2026-09-30"
+   ],
+   "tahun": 2026
+  },
   "XLM": {
    "jangkar_low": null,
    "jangkar_peak": null,
@@ -520,7 +583,7 @@
     }
    },
    "low_teramati": [
-    1.4941163800855644,
+    1.4885365365088203,
     "2026-09-30"
    ],
    "peak_teramati": [
@@ -530,6 +593,6 @@
    "tahun": 2026
   }
  },
- "telegram_offset": 365159262,
+ "telegram_offset": 365159264,
  "versi_perintah": 1
 }

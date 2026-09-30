@@ -28,5 +28,10 @@
   "id": 512,
   "halaman": "stellar",
   "nama": "Stellar"
+ },
+ "SOL": {
+  "id": 5426,
+  "halaman": "solana",
+  "nama": "Solana"
  }
 }
