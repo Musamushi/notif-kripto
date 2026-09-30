@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "normal, atau tes = kirim ringkasan semua koin ke Telegram"
+        description: "normal, atau tes = kirim laporan semua koin ke Telegram"
         type: choice
         options: [normal, tes]
         default: normal
@@ -19,13 +19,21 @@ concurrency:
 
 jobs:
   pantau:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Pasang pustaka grafik
+        run: pip install -r requirements.txt
 
       - name: Periksa harga
-        run: python3 pantau.py ${{ inputs.mode == 'tes' && '--tes' || '' }}
+        run: python pantau.py ${{ inputs.mode == 'tes' && '--tes' || '' }}
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
