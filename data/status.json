@@ -259,7 +259,7 @@
     }
    },
    "low_teramati": [
-    2611.4115284129966,
+    2608.278349836915,
     "2026-10-07"
    ],
    "peak_teramati": [
@@ -593,6 +593,6 @@
    "tahun": 2026
   }
  },
- "telegram_offset": 365159275,
+ "telegram_offset": 365159276,
  "versi_perintah": 1
 }
