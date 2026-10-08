@@ -259,7 +259,7 @@
     }
    },
    "low_teramati": [
-    2514.5084043783513,
+    2512.94561855209,
     "2026-10-08"
    ],
    "peak_teramati": [
@@ -306,7 +306,7 @@
     },
     "Low 2025": {
      "siaga": false,
-     "sisi": "atas"
+     "sisi": "bawah"
     },
     "Peak 2017": {
      "siaga": true,
@@ -346,7 +346,7 @@
     }
    },
    "low_teramati": [
-    63.85865434601926,
+    63.66423981664956,
     "2026-10-08"
    ],
    "peak_teramati": [
@@ -456,7 +456,7 @@
     },
     "Low 2025": {
      "siaga": false,
-     "sisi": "atas"
+     "sisi": "bawah"
     },
     "Peak 2017": {
      "siaga": true,
