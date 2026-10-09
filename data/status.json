@@ -355,6 +355,29 @@
    ],
    "tahun": 2026
   },
+  "NXPC": {
+   "jangkar_low": null,
+   "jangkar_peak": null,
+   "level": {
+    "Low 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    },
+    "Peak 2025": {
+     "siaga": true,
+     "sisi": "bawah"
+    }
+   },
+   "low_teramati": [
+    0.20966271784548884,
+    "2026-10-09"
+   ],
+   "peak_teramati": [
+    0.20966271784548884,
+    "2026-10-09"
+   ],
+   "tahun": 2026
+  },
   "SOL": {
    "jangkar_low": null,
    "jangkar_peak": null,
@@ -593,6 +616,6 @@
    "tahun": 2026
   }
  },
- "telegram_offset": 365159281,
+ "telegram_offset": 365159284,
  "versi_perintah": 1
 }

@@ -329,6 +329,56 @@
     "peak_tgl": "2026-01-06"
    }
   },
+  "NXPC": {
+   "2017": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2018": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2019": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2020": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2021": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2022": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2023": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2024": {
+    "kosong": true,
+    "lengkap": true
+   },
+   "2025": {
+    "hari": 231,
+    "lengkap": true,
+    "low": 0.2547745037,
+    "low_tgl": "2025-10-10",
+    "peak": 3.8393480389,
+    "peak_tgl": "2025-05-15"
+   },
+   "2026": {
+    "hari": 281,
+    "lengkap": false,
+    "low": 0.1741614658,
+    "low_tgl": "2026-08-14",
+    "peak": 0.4411549197,
+    "peak_tgl": "2026-06-02"
+   }
+  },
   "SOL": {
    "2017": {
     "kosong": true,
