@@ -32,7 +32,7 @@
      "sisi": "atas"
     },
     "Low 2022": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "atas"
     },
     "Low 2023": {
@@ -306,7 +306,7 @@
     },
     "Low 2025": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Peak 2017": {
      "siaga": true,
