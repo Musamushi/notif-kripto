@@ -14,12 +14,49 @@ harga sekarang, level terdekat, dan tabel Low/Peak setiap tahun (dolar, rupiah, 
 dari harga sekarang: 🟢▲ = level di atas harga, 🔴▼ = level di bawah harga). Setiap harga ditulis dalam dolar diikuti rupiahnya, dengan kurs
 USD→IDR hari ini dari CoinMarketCap (cadangan: Yahoo). Peringatan tetap dihitung dalam dolar. Pengaturan (toleransi, dll.) ada di bagian atas `pantau.py`.
 
+## Sinyal strategi (`strategi.py`)
+
+Semua ambang berasal dari uji data harian CoinMarketCap 2017–2026. Pola historis, bukan jaminan dan
+bukan saran keuangan. Setiap pesan berupa gambar + judul singkat, harga dalam dolar dan rupiah.
+
+**Beli: hanya saat PASAR ANJLOK** (BTC turun ≥ 40% dari harga tertinggi 12 bulan; pulih bila kembali di atas -35%)
+
+| Pesan | Kapan |
+|---|---|
+| 🚨 Pasar anjlok | sekali di awal; tabel batas beli utama semua koin |
+| 🟢🟢 BELI UTAMA | koin masuk zona murah **Ekstrem**; ada perkiraan masih bisa turun: pasti kena -12%, estimasi -49%, rendah -75% (15 kasus sejak 2018), F&G, Mayer, status jaringan |
+| ✅ Pasar pulih | sekali, saat BTC kembali di atas -35% |
+
+**Jual**
+
+| Pesan | Kapan | Historis |
+|---|---|---|
+| ⚠️ JUAL KUAT | laporan Low/Peak menyentuh Peak tahunan saat di zona mahal | 84% turun dalam 90 hari |
+| 🔴 Zona mahal | masuk tingkat Aman / Estimasi / Tinggi (aktif lagi setelah menjauh 10%) | ±67% |
+| 🔥 Euforia | volume 7 hari ≥ 2,5x rata-rata setahun + naik ≥ 50% dalam 30 hari, hanya di zona mahal | LTC & ADA Des 2024 |
+| 🔔 Waspada sell the news | H-7 sampai hari acara, bila harga sudah naik ≥ 30% dalam 60 hari | 8 dari 9 turun |
+
+**Risiko & laporan rutin**
+
+| Pesan | Kapan |
+|---|---|
+| 🚨 Kasus khusus koin | turun ≥ 25% lebih dalam dari BTC dalam 7 hari + volume ≥ 2x (XRP-SEC 2020, SOL-FTX 2022); dilampiri judul berita terkait |
+| 📉 Kesehatan jaringan | bulanan; penggunaan (TVL DefiLlama dalam jumlah koin) turun ≥ 30% dalam 12 bulan, pesan hanya bila status berubah |
+| 🗓 Ringkasan mingguan | Senin mulai 07:00 WIB: zona semua koin, status pasar, acara 30 hari |
+
+Zona dihitung dari riwayat Low/Peak tahunan: zona murah altcoin = 30% / 20% / 12% dari puncak siklus terakhir;
+BTC = 100% / 81% / 70% puncak siklus sebelumnya; zona mahal = perkiraan puncak berikut (rumus dasar→puncak BTC,
+kelipatan altcoin disusutkan seperti BTC). Siklus & tanggal selesainya ada di `SIKLUS` pada `strategi.py`;
+siklus 2029 masih perkiraan. Kalender acara tersimpan di `data/acara.json` (diatur dengan `/acara`).
+
 ## Perintah Telegram
 
 | Perintah | Fungsi |
 |---|---|
 | `/cek` | ringkasan harga semua koin |
 | `/cek XRP` | grafik dan detail satu koin |
+| `/siklus` | zona murah/mahal semua koin (gambar); `/siklus XRP` = satu koin |
+| `/acara` | kalender acara; `/acara tambah 2027-07-28 LTC Halving LTC`; `/acara hapus 2` |
 | `/daftar` | koin yang sedang dipantau |
 | `/tambah SOL` | tambah koin (boleh beberapa: `/tambah SOL DOGE`) |
 | `/hapus XLM` | berhenti memantau koin |
@@ -65,6 +102,7 @@ Catatan:
 pip install -r requirements.txt   # sekali saja, untuk grafik
 python pantau.py --kering        # tampilkan pesan di layar, grafik disimpan ke folder pratinjau
 python pantau.py --tes           # kirim laporan semua koin ke Telegram
+python uji_pantau.py             # uji logika peringatan (tanpa internet/Telegram)
 ```
 
 ## Cara kerja singkat

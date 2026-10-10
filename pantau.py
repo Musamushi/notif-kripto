@@ -27,8 +27,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+import strategi
 
 # ---------------------------------------------------------------- Pengaturan
 # Koin awal; setelah data/koin.json terbentuk, daftar koin diatur lewat Telegram (/tambah, /hapus).
@@ -64,9 +66,11 @@ KURS_IDR = None  # (rupiah per 1 USD, sumber); diisi ambil_harga()
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/124 Safari/537.36"}
 BULAN = "Jan Feb Mar Apr Mei Jun Jul Agu Sep Okt Nov Des".split()
-VERSI_PERINTAH = 1  # naikkan bila daftar PERINTAH berubah, supaya menu Telegram diperbarui
+VERSI_PERINTAH = 3  # naikkan bila daftar PERINTAH berubah, supaya menu Telegram diperbarui
 PERINTAH = [
     ("cek", "Ringkasan semua koin; /cek XRP = grafik XRP"),
+    ("siklus", "Zona murah/mahal semua koin; /siklus XRP = satu koin"),
+    ("acara", "Kalender acara (sell the news): lihat/tambah/hapus"),
     ("daftar", "Daftar koin yang dipantau"),
     ("tambah", "Tambah koin, contoh: /tambah SOL"),
     ("hapus", "Hapus koin, contoh: /hapus XLM"),
@@ -76,6 +80,9 @@ BANTUAN = (
     "<b>Perintah</b>\n"
     "/cek - ringkasan harga semua koin\n"
     "/cek XRP - grafik dan detail satu koin\n"
+    "/siklus - zona harga murah/mahal semua koin (gambar)\n"
+    "/siklus XRP - zona harga satu koin\n"
+    "/acara - kalender acara; /acara tambah 2027-07-28 LTC Halving LTC; /acara hapus 2\n"
     "/daftar - koin yang sedang dipantau\n"
     "/tambah SOL - tambah koin (boleh beberapa: /tambah SOL DOGE)\n"
     "/hapus XLM - berhenti memantau koin\n\n"
@@ -84,6 +91,9 @@ BANTUAN = (
     "Peringatan otomatis dikirim bila harga menyentuh Low/Peak tahun sebelumnya, mencetak "
     f"Low/Peak baru tahun ini, atau Fear &amp; Greed berubah {FG_LANGKAH} poin / menyentuh "
     f"{', '.join(map(str, FG_AMBANG_BAWAH))} atau {', '.join(map(str, FG_AMBANG_ATAS))}.\n\n"
+    "Sinyal tambahan: PASAR ANJLOK (BTC -40% dari tertinggi 12 bulan) + BELI UTAMA di zona murah Ekstrem; "
+    "zona mahal, JUAL KUAT, euforia, waspada sell the news (H-7 acara); kasus khusus koin; kesehatan jaringan; "
+    "ringkasan mingguan tiap Senin pagi.\n\n"
     "🟢▲ = level di atas harga sekarang, 🔴▼ = level di bawah harga sekarang."
 )
 
@@ -485,7 +495,7 @@ def susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber, judul=Tr
         detail = "  ".join(f"{panah(x[1], harga[sym])} {x[0]} {persen(x[1], harga[sym])}"
                            for x in (atas_lv, bawah_lv) if x)
         baris.append(f"🪙 <b>{sym}</b>  {usd_idr(harga[sym])}\n      {detail}")
-    baris.append("")
+    baris += ["", "🔄 /siklus untuk indikator siklus BTC"]
     return "\n".join(baris + baris_kaki(sekarang, sumber))
 
 
@@ -616,9 +626,15 @@ def proses_perintah(koin, riwayat, status, antrean_cek):
         if perintah in ("start", "bantuan", "help"):
             kirim_teks(BANTUAN)
         elif perintah == "daftar":
-            kirim_teks(teks_daftar(koin))
+            petunjuk = (f"\n\nUntuk menambah koin, pakai /tambah {html.escape(' '.join(argumen))}"
+                        if argumen else "")
+            kirim_teks(teks_daftar(koin) + petunjuk)
         elif perintah == "cek":
             antrean_cek.update(a.upper() for a in argumen) if argumen else antrean_cek.add("*")
+        elif perintah == "siklus":
+            antrean_cek.update(f"#siklus:{a.upper()}" for a in argumen) if argumen else antrean_cek.add("#siklus")
+        elif perintah == "acara":
+            kirim_teks(strategi.perintah_acara(argumen, datetime.now(timezone.utc).date()))
         elif perintah == "tambah":
             if not argumen:
                 kirim_teks("Tulis simbol koinnya, contoh: /tambah SOL")
@@ -690,6 +706,7 @@ def main():
     normal = not (kering or tes)
 
     sekarang = datetime.now(timezone.utc)
+    strategi.pasang(sys.modules[__name__])  # sebelum perintah Telegram (/acara memakai strategi)
     koin = baca(BERKAS_KOIN, None) or copy.deepcopy(KOIN_AWAL)
     riwayat = baca(BERKAS_RIWAYAT, {"diperbarui": None, "koin": {}})
     status = baca(BERKAS_STATUS, {"koin": {}})
@@ -710,6 +727,7 @@ def main():
         sys.exit("[!] Tidak ada harga yang berhasil diambil.")
     fg = ambil_fear_greed()
     gagal_kirim = False
+    strategi.siapkan(koin, harga, riwayat, status, sekarang)
 
     # Fear & Greed: bergeser >= FG_LANGKAH poin, atau menyentuh ambang ekstrem
     fg_lalu = status.get("fg")
@@ -738,13 +756,19 @@ def main():
             continue
         level = daftar_level(rk, st, sekarang.year)
         atas, bawah = susun_pesan(sym, k, harga[sym], kejadian, level, fg, sekarang, sumber)
+        awalan, baris_zona = strategi.keterangan_zona(sym, harga[sym], kejadian)
+        atas = awalan + atas + (f"\n{baris_zona}" if baris_zona else "")
         png = grafik_koin(sym, k, harga[sym], kejadian, level, sekarang)
         if kirim_laporan(atas, bawah, png, kering, f"{sym}.png"):
             status["koin"][sym] = st
         else:
             gagal_kirim = True
 
-    for sym in antrean_cek - set(koin) - {"*"}:
+    # Strategi: pasar anjlok/BELI UTAMA, zona mahal, euforia, kasus khusus, sell the news, jaringan, mingguan
+    if strategi.jalankan(koin, harga, riwayat, status, fg, sekarang, kering, tes, antrean_cek):
+        gagal_kirim = True
+
+    for sym in {x for x in antrean_cek if not x.startswith("#")} - set(koin) - {"*"}:
         kirim_teks(f"{html.escape(sym)} tidak ada di daftar. Tambahkan dulu: /tambah {html.escape(sym)}")
     if "*" in antrean_cek:
         kirim_teks(susun_ringkasan(koin, harga, riwayat, status, fg, sekarang, sumber))

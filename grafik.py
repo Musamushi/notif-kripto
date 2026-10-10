@@ -125,3 +125,147 @@ def grafik_fg(riwayat, skor, nama, skor_lalu, sumber, bulan):
     fig.text(0.99, 0.01, f"Sumber: {sumber}", ha="right", fontsize=9, color="#64748b")
     fig.tight_layout(rect=(0, 0.02, 0.9, 0.95))
     return _png(fig)
+
+
+def _sumbu_harga(ax, uang):
+    ax.set_yscale("log")
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: uang(v)))
+    ax.yaxis.set_minor_formatter(NullFormatter())
+
+
+def grafik_zona(sym, harga, z, harian, lencana, warna_lencana, ekstra, catatan, uang, rp, bulan,
+                tingkat_murah, tingkat_mahal):
+    """Laporan zona satu koin: kepala, grafik 1 tahun berpita zona, tabel tingkat murah/mahal, baris tambahan.
+    ekstra: [(label, nilai, keterangan)]."""
+    baris_tabel = 2 + len(tingkat_murah) + len(tingkat_mahal) + (1 + len(ekstra) if ekstra else 0)
+    tinggi = 6.6 + 0.42 * baris_tabel + 0.6
+    fig = plt.figure(figsize=(9, tinggi), dpi=120)
+    y = lambda inci: 1 - inci / tinggi  # noqa: E731
+    fig.text(0.05, y(0.35), sym, fontsize=24, fontweight="bold", color=TEKS, va="top")
+    fig.text(0.05, y(0.85), f"Sekarang {uang(harga)}  ≈  {rp(harga)}", fontsize=14, color=TEKS, va="top")
+    fig.text(0.95, y(0.35), lencana, fontsize=14, fontweight="bold", color="white", ha="right", va="top",
+             bbox=dict(boxstyle="round,pad=0.45", facecolor=warna_lencana, edgecolor="none"))
+
+    ax = fig.add_axes([0.11, y(5.7), 0.80, 4.2 / tinggi])
+    m, k = z["murah"], z["mahal"]
+    semua = [harga]
+    if harian:
+        tgl, tutup = zip(*harian)
+        ax.plot(tgl, tutup, color=BIRU, linewidth=1.8)
+        ax.scatter([tgl[-1]], [harga], color=MERAH, s=55, zorder=5)
+        semua += list(tutup)
+    ax.axhspan(m[2], m[0], color=HIJAU, alpha=0.13, linewidth=0)
+    ax.axhspan(k[0], k[2], color=MERAH, alpha=0.10, linewidth=0)
+    for v, w, label in ((m[2], HIJAU, "Ekstrem"), (k[1], MERAH, "estimasi puncak")):
+        ax.axhline(v, color=w, linestyle="--", linewidth=1.2)
+        ax.text(0.01, v, f" {label} {uang(v)}", transform=ax.get_yaxis_transform(), color=w, fontsize=10,
+                fontweight="bold", va="bottom", path_effects=GARIS_PUTIH)
+    batas = semua + list(m) + list(k)
+    ax.set_ylim(min(batas) / 1.25, max(batas) * 1.25)
+    _sumbu_harga(ax, uang)
+    if harian:
+        _sumbu_bulan(ax, bulan, tiap=2)
+    ax.text(1.01, (m[0] * m[2]) ** 0.5, "MURAH", transform=ax.get_yaxis_transform(), color=HIJAU, fontsize=10,
+            fontweight="bold", va="center")
+    ax.text(1.01, (k[0] * k[2]) ** 0.5, "MAHAL", transform=ax.get_yaxis_transform(), color=MERAH, fontsize=10,
+            fontweight="bold", va="center")
+    ax.grid(color="#e2e8f0", linewidth=0.8)
+    _rapikan(ax)
+
+    pos = [6.2]
+
+    def judul(teks, warna):
+        fig.patches.append(plt.Rectangle((0.05, y(pos[0] + 0.18)), 0.90, 0.36 / tinggi, transform=fig.transFigure,
+                                         facecolor=warna, alpha=0.12, edgecolor="none"))
+        fig.text(0.07, y(pos[0]), teks, fontsize=12.5, fontweight="bold", color=warna, va="center")
+        pos[0] += 0.42
+
+    def baris(label, nilai, ket, warna):
+        fig.text(0.09, y(pos[0]), label, fontsize=12, color=TEKS, va="center")
+        fig.text(0.64, y(pos[0]), nilai, fontsize=12, color=TEKS, fontweight="bold", ha="right", va="center")
+        fig.text(0.66, y(pos[0]), ket, fontsize=10, color=warna, va="center")
+        pos[0] += 0.42
+
+    judul("ZONA MURAH · perkiraan dasar", HIJAU)
+    for nama, v in zip(tingkat_murah, m):
+        baris(nama, f"{uang(v)} · {rp(v)}", f"{(v / harga - 1) * 100:+.0f}% dari sekarang", HIJAU)
+    judul("ZONA MAHAL · perkiraan puncak siklus berikut", MERAH)
+    for nama, v in zip(tingkat_mahal, k):
+        baris(nama, f"{uang(v)} · {rp(v)}", f"{(v / harga - 1) * 100:+.0f}% dari sekarang", MERAH)
+    if ekstra:
+        judul("KETERANGAN", REDUP)
+        for label, nilai, ket in ekstra:
+            baris(label, nilai, ket, REDUP)
+    fig.text(0.05, 0.3 / tinggi, catatan, fontsize=9, color=REDUP, wrap=True)
+    return _png(fig)
+
+
+def grafik_tabel(judul, subjudul, kolom, baris, catatan, tambahan=()):
+    """Tabel sebagai gambar. kolom: [(judul, x, ha)]; baris: [[(teks, warna, tebal), ...]]; tambahan: [(teks, warna)]."""
+    tambahan = list(tambahan or [])
+    tinggi = 1.75 + 0.62 * len(baris) + 0.36 * len(tambahan) + 0.7
+    fig = plt.figure(figsize=(9, tinggi), dpi=120)
+    y = lambda inci: 1 - inci / tinggi  # noqa: E731
+    fig.text(0.05, y(0.42), judul, fontsize=17, fontweight="bold", color=TEKS, va="center")
+    if subjudul:
+        fig.text(0.05, y(0.82), subjudul, fontsize=10.5, color=REDUP, va="center")
+    for teks, x, ha in kolom:
+        fig.text(x, y(1.35), teks, fontsize=10.5, color=REDUP, fontweight="bold", ha=ha, va="center")
+    for i, sel in enumerate(baris):
+        yy = 1.95 + 0.62 * i
+        if i % 2 == 0:
+            fig.patches.append(plt.Rectangle((0.03, y(yy + 0.31)), 0.94, 0.62 / tinggi, transform=fig.transFigure,
+                                             facecolor="#f1f5f9", edgecolor="none"))
+        for (teks, warna, tebal), (_, x, ha) in zip(sel, kolom):
+            fig.text(x, y(yy), teks, fontsize=11.5, color=warna or TEKS, fontweight="bold" if tebal else "normal",
+                     ha=ha, va="center", linespacing=1.15)
+    yy = 1.95 + 0.62 * len(baris) + 0.1
+    for teks, warna in tambahan:
+        fig.text(0.05, y(yy), teks, fontsize=10.5, color=warna or TEKS, va="center")
+        yy += 0.36
+    fig.text(0.05, 0.22 / tinggi, catatan, fontsize=9, color=REDUP)
+    return _png(fig)
+
+
+def grafik_acara(sym, nama_acara, tgl_acara, sisa, harga, harian, naik60, vol, uang, rp, bulan, perkiraan=False):
+    """Peringatan sell the news: harga 120 hari, garis acara, perkiraan pola 30 hari sesudah acara."""
+    from datetime import datetime, timedelta
+    fig = plt.figure(figsize=(9, 10.2), dpi=120)
+    fig.text(0.05, 0.965, f"{sym} · {nama_acara}", fontsize=18, fontweight="bold", color=TEKS, va="top")
+    fig.text(0.05, 0.925, f"Acara {'±' if perkiraan else ''}{tgl_acara:%d-%m-%Y} · {sisa} hari lagi · "
+             f"{uang(harga)} ≈ {rp(harga)}", fontsize=12.5, color=REDUP, va="top")
+    fig.text(0.95, 0.965, "WASPADA", fontsize=14, fontweight="bold", color="white", ha="right", va="top",
+             bbox=dict(boxstyle="round,pad=0.45", facecolor=MERAH, edgecolor="none"))
+    ax = fig.add_axes([0.11, 0.45, 0.82, 0.42])
+    lalu = harian[-120:] if harian else []
+    if lalu:
+        tgl, tutup = zip(*lalu)
+        ax.plot(tgl, tutup, color=BIRU, linewidth=2)
+        ax.scatter([tgl[-1]], [harga], color=MERAH, s=55, zorder=5)
+    t_acara = datetime(tgl_acara.year, tgl_acara.month, tgl_acara.day)
+    hasil30 = (-0.11, -0.22, -0.51)
+    x = [lalu[-1][0] if lalu else t_acara, t_acara + timedelta(days=30)]
+    for p, gaya, lebar in zip(hasil30, ("--", "-", "--"), (1.2, 2.2, 1.2)):
+        ax.plot(x, [harga, harga * (1 + p)], color=MERAH, linestyle=gaya, linewidth=lebar, alpha=0.8)
+    ax.fill_between(x, [harga, harga * (1 + hasil30[0])], [harga, harga * (1 + hasil30[2])], color=MERAH, alpha=0.08)
+    ax.axvline(t_acara, color=ORANYE, linewidth=2)
+    ax.text(t_acara, 1.01, " acara", transform=ax.get_xaxis_transform(), color=ORANYE, fontsize=11, fontweight="bold")
+    _sumbu_harga(ax, uang)
+    _sumbu_bulan(ax, bulan)
+    ax.grid(color="#e2e8f0", linewidth=0.8)
+    _rapikan(ax)
+    baris = [("Kenaikan 60 hari", f"{naik60 * 100:+.0f}%", "syarat waspada ≥ +30%"),
+             ("Volume 7 hari", f"{vol:.1f}x", "dibanding 90 hari sebelumnya")]
+    baris += [(f"Perkiraan 30 hari · {n}", f"{uang(harga * (1 + p))} · {rp(harga * (1 + p))}", f"{p * 100:+.0f}%")
+              for n, p in zip(("aman", "estimasi", "ekstrem"), hasil30)]
+    yy = 0.37
+    for label, nilai, ket in baris:
+        fig.text(0.07, yy, label, fontsize=12, color=TEKS)
+        fig.text(0.64, yy, nilai, fontsize=12, color=MERAH, fontweight="bold", ha="right")
+        fig.text(0.66, yy, ket, fontsize=10.5, color=REDUP)
+        yy -= 0.045
+    fig.text(0.07, yy - 0.01, "Pola historis: pertimbangkan jual sebagian SEBELUM acara.\n8 dari 9 kasus serupa sejak 2017 "
+             "turun dalam 30 hari (rata-rata -18%; 90 hari -30%).", fontsize=12, color=TEKS, va="top", linespacing=1.5)
+    fig.text(0.05, 0.02, "Pola dari 21 acara terjadwal 2017-2025 (sampel kecil). Bukan saran keuangan · CoinMarketCap",
+             fontsize=9, color=REDUP)
+    return _png(fig)
