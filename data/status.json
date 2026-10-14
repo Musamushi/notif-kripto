@@ -32,7 +32,7 @@
      "sisi": "atas"
     },
     "Low 2022": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "bawah"
     },
     "Low 2023": {
@@ -247,7 +247,7 @@
     },
     "Peak 2023": {
      "siaga": false,
-     "sisi": "atas"
+     "sisi": "bawah"
     },
     "Peak 2024": {
      "siaga": true,
@@ -346,8 +346,8 @@
     }
    },
    "low_teramati": [
-    59.73591629382296,
-    "2026-10-13"
+    58.96544138384266,
+    "2026-10-14"
    ],
    "peak_teramati": [
     72.15685375355633,
@@ -506,7 +506,7 @@
      "sisi": "bawah"
     },
     "Peak 2023": {
-     "siaga": true,
+     "siaga": false,
      "sisi": "atas"
     },
     "Peak 2024": {
@@ -519,7 +519,7 @@
     }
    },
    "low_teramati": [
-    0.18475526376017332,
+    0.18346436330580665,
     "2026-10-14"
    ],
    "peak_teramati": [
