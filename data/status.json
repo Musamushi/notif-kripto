@@ -37,7 +37,7 @@
     },
     "Low 2023": {
      "siaga": false,
-     "sisi": "atas"
+     "sisi": "bawah"
     },
     "Low 2024": {
      "siaga": true,
@@ -905,6 +905,6 @@
    }
   }
  },
- "telegram_offset": 365159288,
+ "telegram_offset": 365159289,
  "versi_perintah": 3
 }
