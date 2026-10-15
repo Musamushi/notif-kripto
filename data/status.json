@@ -360,8 +360,8 @@
    "jangkar_peak": null,
    "level": {
     "Low 2025": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2025": {
      "siaga": true,
@@ -373,7 +373,7 @@
     "2026-10-15"
    ],
    "peak_teramati": [
-    0.23838857909030123,
+    0.2911588249044006,
     "2026-10-15"
    ],
    "tahun": 2026
