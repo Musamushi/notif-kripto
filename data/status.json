@@ -37,7 +37,7 @@
     },
     "Low 2023": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Low 2024": {
      "siaga": true,
@@ -247,7 +247,7 @@
     },
     "Peak 2023": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Peak 2024": {
      "siaga": true,
@@ -360,7 +360,7 @@
    "jangkar_peak": null,
    "level": {
     "Low 2025": {
-     "siaga": true,
+     "siaga": false,
      "sisi": "atas"
     },
     "Peak 2025": {
