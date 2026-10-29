@@ -2,9 +2,9 @@
  "fg": {
   "ambang": [],
   "nama": "Neutral",
-  "skor": 50,
+  "skor": 40,
   "sumber": "CoinMarketCap",
-  "waktu": "2026-10-13T00:30:47.741259+00:00"
+  "waktu": "2026-10-29T21:15:31.526144+00:00"
  },
  "koin": {
   "ADA": {
@@ -404,7 +404,7 @@
     },
     "Low 2025": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Peak 2020": {
      "siaga": true,
