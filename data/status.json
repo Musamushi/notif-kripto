@@ -9,7 +9,7 @@
  "koin": {
   "ADA": {
    "jangkar_low": null,
-   "jangkar_peak": null,
+   "jangkar_peak": 0.7644788405750521,
    "level": {
     "Low 2017": {
      "siaga": true,
@@ -32,20 +32,20 @@
      "sisi": "atas"
     },
     "Low 2022": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Low 2023": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Low 2024": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Low 2025": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2017": {
      "siaga": true,
@@ -60,7 +60,7 @@
      "sisi": "atas"
     },
     "Peak 2020": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "atas"
     },
     "Peak 2021": {
@@ -72,8 +72,8 @@
      "sisi": "bawah"
     },
     "Peak 2023": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2024": {
      "siaga": true,
@@ -89,8 +89,8 @@
     "2026-10-29"
    ],
    "peak_teramati": [
-    0.27946178433638197,
-    "2026-10-06"
+    0.7644788405750521,
+    "2026-10-29"
    ],
    "tahun": 2026
   },
@@ -131,8 +131,8 @@
      "sisi": "atas"
     },
     "Low 2025": {
-     "siaga": true,
-     "sisi": "atas"
+     "siaga": false,
+     "sisi": "bawah"
     },
     "Peak 2017": {
      "siaga": true,
@@ -172,8 +172,8 @@
     }
    },
    "low_teramati": [
-    79326.14186625034,
-    "2026-10-24"
+    73341.90867000577,
+    "2026-10-29"
    ],
    "peak_teramati": [
     86967.230895192,
@@ -183,7 +183,7 @@
   },
   "ETH": {
    "jangkar_low": null,
-   "jangkar_peak": null,
+   "jangkar_peak": 3965.391533079797,
    "level": {
     "Low 2017": {
      "siaga": true,
@@ -242,12 +242,12 @@
      "sisi": "bawah"
     },
     "Peak 2022": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2023": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2024": {
      "siaga": true,
@@ -263,14 +263,14 @@
     "2026-10-24"
    ],
    "peak_teramati": [
-    2760.951748840665,
-    "2026-10-02"
+    3965.391533079797,
+    "2026-10-29"
    ],
    "tahun": 2026
   },
   "LTC": {
    "jangkar_low": null,
-   "jangkar_peak": null,
+   "jangkar_peak": 95.46405225263729,
    "level": {
     "Low 2017": {
      "siaga": true,
@@ -297,16 +297,16 @@
      "sisi": "atas"
     },
     "Low 2023": {
-     "siaga": false,
-     "sisi": "bawah"
+     "siaga": true,
+     "sisi": "atas"
     },
     "Low 2024": {
      "siaga": true,
      "sisi": "atas"
     },
     "Low 2025": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2017": {
      "siaga": true,
@@ -350,8 +350,8 @@
     "2026-10-24"
    ],
    "peak_teramati": [
-    72.15685375355633,
-    "2026-10-04"
+    95.46405225263729,
+    "2026-10-29"
    ],
    "tahun": 2026
   },
@@ -380,7 +380,7 @@
   },
   "SOL": {
    "jangkar_low": null,
-   "jangkar_peak": null,
+   "jangkar_peak": 168.41414054004736,
    "level": {
     "Low 2020": {
      "siaga": true,
@@ -419,8 +419,8 @@
      "sisi": "bawah"
     },
     "Peak 2023": {
-     "siaga": true,
-     "sisi": "bawah"
+     "siaga": false,
+     "sisi": "atas"
     },
     "Peak 2024": {
      "siaga": true,
@@ -436,8 +436,8 @@
     "2026-10-24"
    ],
    "peak_teramati": [
-    122.95233110771011,
-    "2026-10-02"
+    168.41414054004736,
+    "2026-10-29"
    ],
    "tahun": 2026
   },
@@ -490,8 +490,8 @@
      "sisi": "bawah"
     },
     "Peak 2019": {
-     "siaga": true,
-     "sisi": "atas"
+     "siaga": false,
+     "sisi": "bawah"
     },
     "Peak 2020": {
      "siaga": true,
@@ -519,8 +519,8 @@
     }
    },
    "low_teramati": [
-    0.16660968225444758,
-    "2026-10-27"
+    0.148353666755827,
+    "2026-10-29"
    ],
    "peak_teramati": [
     0.23088584003466933,
@@ -529,7 +529,7 @@
    "tahun": 2026
   },
   "XRP": {
-   "jangkar_low": null,
+   "jangkar_low": 0.6795935958929805,
    "jangkar_peak": null,
    "level": {
     "Low 2017": {
@@ -581,20 +581,20 @@
      "sisi": "atas"
     },
     "Peak 2020": {
-     "siaga": true,
-     "sisi": "atas"
+     "siaga": false,
+     "sisi": "bawah"
     },
     "Peak 2021": {
      "siaga": true,
      "sisi": "bawah"
     },
     "Peak 2022": {
-     "siaga": true,
-     "sisi": "atas"
+     "siaga": false,
+     "sisi": "bawah"
     },
     "Peak 2023": {
-     "siaga": true,
-     "sisi": "atas"
+     "siaga": false,
+     "sisi": "bawah"
     },
     "Peak 2024": {
      "siaga": true,
@@ -606,8 +606,8 @@
     }
    },
    "low_teramati": [
-    1.2576621437633977,
-    "2026-10-18"
+    0.6795935958929805,
+    "2026-10-29"
    ],
    "peak_teramati": [
     1.5443789933991678,
@@ -631,7 +631,10 @@
   "mahal": {
    "ADA": {
     "ref": "2024-12-03",
-    "sudah": []
+    "sudah": [
+     0,
+     1
+    ]
    },
    "BTC": {
     "ref": "2025-10-06",
@@ -639,11 +642,15 @@
    },
    "ETH": {
     "ref": "2025-08-24",
-    "sudah": []
+    "sudah": [
+     0
+    ]
    },
    "LTC": {
     "ref": "2024-12-05",
-    "sudah": []
+    "sudah": [
+     0
+    ]
    },
    "NXPC": {
     "ref": "2025-05-15",
@@ -890,11 +897,11 @@
     "siklus": "2025"
    },
    "XRP": {
-    "dasar": 0.988422,
+    "dasar": 0.6795936,
     "mahal": [
      3.10267852,
-     4.61152886,
-     6.23384194
+     3.82382818,
+     4.28610358
     ],
     "murah": [
      1.09506301,
