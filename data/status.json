@@ -60,7 +60,7 @@
      "sisi": "atas"
     },
     "Peak 2020": {
-     "siaga": true,
+     "siaga": false,
      "sisi": "atas"
     },
     "Peak 2021": {
@@ -85,7 +85,7 @@
     }
    },
    "low_teramati": [
-    0.19863429381399011,
+    0.19693502322010853,
     "2026-10-29"
    ],
    "peak_teramati": [
