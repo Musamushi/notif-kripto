@@ -60,7 +60,7 @@
      "sisi": "atas"
     },
     "Peak 2020": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "bawah"
     },
     "Peak 2021": {
@@ -246,7 +246,7 @@
      "sisi": "bawah"
     },
     "Peak 2023": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "bawah"
     },
     "Peak 2024": {
@@ -403,7 +403,7 @@
      "sisi": "atas"
     },
     "Low 2025": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "bawah"
     },
     "Peak 2020": {
@@ -490,8 +490,8 @@
      "sisi": "bawah"
     },
     "Peak 2019": {
-     "siaga": true,
-     "sisi": "atas"
+     "siaga": false,
+     "sisi": "bawah"
     },
     "Peak 2020": {
      "siaga": true,
