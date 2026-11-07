@@ -1,10 +1,12 @@
 {
  "fg": {
-  "ambang": [],
-  "nama": "Fear",
-  "skor": 32,
-  "sumber": "CoinMarketCap",
-  "waktu": "2026-11-07T15:15:30.441139+00:00"
+  "ambang": [
+   25
+  ],
+  "nama": "Extreme Fear",
+  "skor": 25,
+  "sumber": "alternative.me",
+  "waktu": "2026-11-07T23:30:40.790463+00:00"
  },
  "koin": {
   "ADA": {
