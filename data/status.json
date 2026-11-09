@@ -2,9 +2,9 @@
  "fg": {
   "ambang": [],
   "nama": "Fear",
-  "skor": 31,
-  "sumber": "CoinMarketCap",
-  "waktu": "2026-11-07T23:45:32.107051+00:00"
+  "skor": 29,
+  "sumber": "alternative.me",
+  "waktu": "2026-11-09T00:45:34.167579+00:00"
  },
  "koin": {
   "ADA": {
@@ -302,7 +302,7 @@
     },
     "Low 2024": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Low 2025": {
      "siaga": true,
