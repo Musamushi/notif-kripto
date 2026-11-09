@@ -302,7 +302,7 @@
     },
     "Low 2024": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Low 2025": {
      "siaga": true,
@@ -356,7 +356,7 @@
    "tahun": 2026
   },
   "NXPC": {
-   "jangkar_low": 0.13717515543064593,
+   "jangkar_low": null,
    "jangkar_peak": null,
    "level": {
     "Low 2025": {
