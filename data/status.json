@@ -31,7 +31,7 @@
     },
     "Low 2021": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Low 2022": {
      "siaga": true,
@@ -174,7 +174,7 @@
     }
    },
    "low_teramati": [
-    71892.70833171962,
+    71639.40819807329,
     "2026-11-12"
    ],
    "peak_teramati": [
