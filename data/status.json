@@ -133,7 +133,7 @@
      "sisi": "atas"
     },
     "Low 2025": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "bawah"
     },
     "Peak 2017": {
@@ -174,7 +174,7 @@
     }
    },
    "low_teramati": [
-    70836.67194666901,
+    70512.63013896489,
     "2026-11-13"
    ],
    "peak_teramati": [
