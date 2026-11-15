@@ -594,7 +594,7 @@
     },
     "Peak 2022": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Peak 2023": {
      "siaga": true,
@@ -764,7 +764,7 @@
     "vol7_90": 0.7021581080260281
    }
   },
-  "metrik_dicoba": "2026-11-14T01:00:48.755871+00:00",
+  "metrik_dicoba": "2026-11-15T00:00:52.166040+00:00",
   "metrik_hari": "2026-11-13",
   "mingguan": "2026-W46",
   "terakhir": {
