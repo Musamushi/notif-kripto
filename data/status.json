@@ -177,7 +177,7 @@
     }
    },
    "low_teramati": [
-    58878.44229517166,
+    58576.3949999169,
     "2026-11-20"
    ],
    "peak_teramati": [
@@ -264,7 +264,7 @@
     }
    },
    "low_teramati": [
-    1626.083687098936,
+    1623.4370766632774,
     "2026-11-20"
    ],
    "peak_teramati": [
@@ -623,8 +623,12 @@
  },
  "strategi": {
   "anjlok": {
-   "aktif": false,
-   "beli": []
+   "aktif": true,
+   "beli": [
+    "ADA",
+    "NXPC"
+   ],
+   "mulai": "2026-11-20"
   },
   "cek_harian": "2026-11-19",
   "jaringan": {
