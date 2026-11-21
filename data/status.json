@@ -1,15 +1,14 @@
 {
  "fg": {
   "ambang": [
-   10,
    15,
    20,
    25
   ],
-  "nama": "Extreme fear",
-  "skor": 10,
-  "sumber": "CoinMarketCap",
-  "waktu": "2026-11-19T20:15:38.057320+00:00"
+  "nama": "Extreme Fear",
+  "skor": 12,
+  "sumber": "alternative.me",
+  "waktu": "2026-11-21T13:15:39.632398+00:00"
  },
  "koin": {
   "ADA": {
@@ -447,7 +446,7 @@
    "tahun": 2026
   },
   "XLM": {
-   "jangkar_low": 0.12194021467455766,
+   "jangkar_low": null,
    "jangkar_peak": null,
    "level": {
     "Low 2017": {
