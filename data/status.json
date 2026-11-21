@@ -13,7 +13,7 @@
  },
  "koin": {
   "ADA": {
-   "jangkar_low": 0.13405222869623254,
+   "jangkar_low": null,
    "jangkar_peak": null,
    "level": {
     "Low 2017": {
@@ -100,7 +100,7 @@
    "tahun": 2026
   },
   "BTC": {
-   "jangkar_low": 56695.35246705945,
+   "jangkar_low": null,
    "jangkar_peak": null,
    "level": {
     "Low 2017": {
