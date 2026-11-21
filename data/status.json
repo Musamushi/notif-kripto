@@ -1,14 +1,15 @@
 {
  "fg": {
   "ambang": [
+   10,
    15,
    20,
    25
   ],
-  "nama": "Extreme Fear",
-  "skor": 12,
-  "sumber": "alternative.me",
-  "waktu": "2026-11-21T13:15:39.632398+00:00"
+  "nama": "Extreme fear",
+  "skor": 7,
+  "sumber": "CoinMarketCap",
+  "waktu": "2026-11-21T13:30:45.848127+00:00"
  },
  "koin": {
   "ADA": {
@@ -594,7 +595,7 @@
     },
     "Peak 2022": {
      "siaga": false,
-     "sisi": "bawah"
+     "sisi": "atas"
     },
     "Peak 2023": {
      "siaga": false,
