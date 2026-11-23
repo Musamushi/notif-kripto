@@ -298,7 +298,7 @@
      "sisi": "bawah"
     },
     "Low 2022": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "atas"
     },
     "Low 2023": {
@@ -623,7 +623,7 @@
  },
  "strategi": {
   "anjlok": {
-   "aktif": true,
+   "aktif": false,
    "beli": [
     "ADA",
     "NXPC"
