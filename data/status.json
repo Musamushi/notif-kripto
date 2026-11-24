@@ -299,7 +299,7 @@
     },
     "Low 2022": {
      "siaga": false,
-     "sisi": "atas"
+     "sisi": "bawah"
     },
     "Low 2023": {
      "siaga": true,
@@ -468,7 +468,7 @@
     },
     "Low 2021": {
      "siaga": false,
-     "sisi": "atas"
+     "sisi": "bawah"
     },
     "Low 2022": {
      "siaga": true,
@@ -594,7 +594,7 @@
      "sisi": "bawah"
     },
     "Peak 2022": {
-     "siaga": true,
+     "siaga": false,
      "sisi": "atas"
     },
     "Peak 2023": {
