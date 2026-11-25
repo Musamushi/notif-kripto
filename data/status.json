@@ -447,7 +447,7 @@
    "tahun": 2026
   },
   "XLM": {
-   "jangkar_low": null,
+   "jangkar_low": 0.11985948600078056,
    "jangkar_peak": null,
    "level": {
     "Low 2017": {
@@ -524,7 +524,7 @@
     }
    },
    "low_teramati": [
-    0.12035652949008964,
+    0.11985948600078056,
     "2026-11-25"
    ],
    "peak_teramati": [
@@ -598,7 +598,7 @@
      "sisi": "bawah"
     },
     "Peak 2023": {
-     "siaga": true,
+     "siaga": false,
      "sisi": "atas"
     },
     "Peak 2024": {
@@ -883,10 +883,10 @@
     "siklus": "2025"
    },
    "XLM": {
-    "dasar": 0.12033826,
+    "dasar": 0.11985949,
     "mahal": [
-     0.44155828,
-     0.57400278,
+     0.43980151,
+     0.57285978,
      0.67864501
     ],
     "murah": [
