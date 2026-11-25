@@ -623,12 +623,12 @@
  },
  "strategi": {
   "anjlok": {
-   "aktif": false,
+   "aktif": true,
    "beli": [
     "ADA",
     "NXPC"
    ],
-   "mulai": "2026-11-20"
+   "mulai": "2026-11-25"
   },
   "cek_harian": "2026-11-24",
   "jaringan": {
