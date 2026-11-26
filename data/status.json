@@ -298,7 +298,7 @@
      "sisi": "bawah"
     },
     "Low 2022": {
-     "siaga": false,
+     "siaga": true,
      "sisi": "atas"
     },
     "Low 2023": {
@@ -769,7 +769,7 @@
     "vol7_90": 0.7196295697548767
    }
   },
-  "metrik_dicoba": "2026-11-25T01:15:46.388931+00:00",
+  "metrik_dicoba": "2026-11-26T00:01:01.989044+00:00",
   "metrik_hari": "2026-11-24",
   "mingguan": "2026-W48",
   "terakhir": {
